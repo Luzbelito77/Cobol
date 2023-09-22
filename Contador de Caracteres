@@ -1,0 +1,50 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CONTADORCARACTERES.
+
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+      *Datos de entrada para poder realizar el pgm
+       01 WS-ENTRADA PIC X(150) VALUE "Ejercicio de prueba para contar caracteres))(/( FFSDFSDF???..".
+       01 WS-CARACTERES OCCURS 256 TIMES.
+       02 WS-CARACT PIC X.
+       01 WS-LARGO   PIC 9(3) VALUE 0.
+       01 WS-COUNT   PIC 9(5) VALUE 0.
+       01 WS-I       PIC 9(3) VALUE 0.
+       01 WS-J       PIC 9(3) VALUE 0.
+       01 WS-CHAR-ENC PIC X(1) VALUE 'N'.
+
+       PROCEDURE DIVISION.
+      *Esta funcion se usa para poder acomodar el string
+      *para poder contar caracteres y no usar todo el string, solo los
+      *validos
+        MOVE FUNCTION REVERSE(WS-ENTRADA) TO WS-ENTRADA.
+        INSPECT WS-ENTRADA
+            TALLYING WS-LARGO FOR LEADING SPACE SUBTRACT WS-LARGO
+            FROM LENGTH OF WS-ENTRADA GIVING WS-LARGO
+        MOVE FUNCTION REVERSE(WS-ENTRADA) TO WS-ENTRADA.
+      *aca comienza el codigo propiamente dicho, iterando hasta terminar
+      *el string
+        PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-LARGO
+            MOVE WS-ENTRADA(WS-I:1) TO WS-CARACT(WS-I)
+            MOVE 'N' TO WS-CHAR-ENC
+      *se pone default el flag a n para poder buscar
+            PERFORM VARYING WS-J FROM 1 BY 1 UNTIL WS-J > WS-LARGO
+      *se recorre el listado de caracteres que ya encontre
+                IF WS-CARACT(WS-I) = WS-ENTRADA(WS-J:1)
+                    IF WS-J < WS-I
+      *si se encuentra, cambio el flag y salgo del perform
+                        MOVE 'S' TO WS-CHAR-ENC
+                        move ws-largo to ws-j
+                    ELSE
+      *no se encuentra, agrego uno
+                        ADD 1 TO WS-COUNT
+                    END-IF
+                END-IF
+            END-PERFORM
+            IF WS-CHAR-ENC = 'N'
+      *solamente muestro cuando no se encontro el caracter
+                DISPLAY  WS-CARACT(WS-I), "-",WS-COUNT
+                MOVE 0 TO WS-COUNT
+            END-IF
+        END-PERFORM
+        STOP RUN.
