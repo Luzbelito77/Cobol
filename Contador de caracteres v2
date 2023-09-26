@@ -1,0 +1,43 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. CONTADORCARACTERESV2.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 WS-ENTRADA                  PIC X(80) VALUE " 12345678901 ABCDEFGHIJKLMNOPQRSTUVWXYZ Ñ ".
+       01 WS-VARIABLES.
+           05 WS-LARGO              PIC 9(03).
+           05 WS-LETRAS             PIC 9(03).
+           05 WS-NUM                PIC 9(03).
+           05 WS-OTROS              PIC 9(03).
+           05 WS-ESPACIOS           PIC 9(03).
+           05 WS-CHAR               PIC 9(03).
+       
+       PROCEDURE DIVISION.
+      *al poner todas las variables dentro de otra, inicializar es mucho mas facil
+           INITIALIZE WS-VARIABLES
+      *esto viene de la version anterior para no contar espacios a la izq
+           MOVE FUNCTION REVERSE(WS-ENTRADA) TO WS-ENTRADA.
+           INSPECT WS-ENTRADA
+           TALLYING WS-LARGO FOR LEADING SPACE SUBTRACT WS-LARGO
+           FROM LENGTH OF WS-ENTRADA GIVING WS-LARGO
+           MOVE FUNCTION REVERSE(WS-ENTRADA) TO WS-ENTRADA.
+      *ejecuto el perform hasta el largo realmente util del texto
+           PERFORM VARYING WS-CHAR FROM 1 BY 1 UNTIL WS-CHAR > WS-LARGO
+      *es numerico, aumento uno
+               EVALUATE WS-ENTRADA(WS-CHAR:1)
+                   WHEN numeric
+                       ADD 1 TO WS-NUM
+                   WHEN ALPHABETIC
+                       ADD 1 TO WS-LETRAS
+                   WHEN SPACES
+                       ADD 1 TO WS-ESPACIOS
+                   WHEN OTHER
+                       ADD 1 TO WS-OTROS
+               END-EVALUATE
+           END-PERFORM
+
+           DISPLAY 'LETRAS  : ' WS-LETRAS
+           DISPLAY 'NUMEROS : ' WS-NUM
+           DISPLAY 'ESPACIOS: ' WS-ESPACIOS
+           DISPLAY 'OTROS   : ' WS-OTROS.
+           STOP RUN.
+           
