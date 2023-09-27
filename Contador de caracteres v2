@@ -2,15 +2,15 @@
        PROGRAM-ID. CONTADORCARACTERESV2.
        DATA DIVISION.
        WORKING-STORAGE SECTION.
-       01 WS-ENTRADA                  PIC X(80) VALUE " 12345678901 ABCDEFGHIJKLMNOPQRSTUVWXYZ Ñ ".
+       01 WS-ENTRADA                  PIC X(80) VALUE "1123  ABCD  ..,,".
        01 WS-VARIABLES.
            05 WS-LARGO              PIC 9(03).
            05 WS-LETRAS             PIC 9(03).
            05 WS-NUM                PIC 9(03).
            05 WS-OTROS              PIC 9(03).
-           05 WS-ESPACIOS           PIC 9(03).
            05 WS-CHAR               PIC 9(03).
-       
+           05 WS-ESP                PIC 9(03).
+
        PROCEDURE DIVISION.
       *al poner todas las variables dentro de otra, inicializar es mucho mas facil
            INITIALIZE WS-VARIABLES
@@ -24,20 +24,19 @@
            PERFORM VARYING WS-CHAR FROM 1 BY 1 UNTIL WS-CHAR > WS-LARGO
       *es numerico, aumento uno
                EVALUATE WS-ENTRADA(WS-CHAR:1)
-                   WHEN numeric
+                   WHEN NUMERIC
                        ADD 1 TO WS-NUM
+                   WHEN SPACE
+                       ADD 1 TO WS-ESP
                    WHEN ALPHABETIC
                        ADD 1 TO WS-LETRAS
-                   WHEN SPACES
-                       ADD 1 TO WS-ESPACIOS
                    WHEN OTHER
                        ADD 1 TO WS-OTROS
                END-EVALUATE
            END-PERFORM
 
            DISPLAY 'LETRAS  : ' WS-LETRAS
+           DISPLAY 'SPACES  : ' WS-ESP
            DISPLAY 'NUMEROS : ' WS-NUM
-           DISPLAY 'ESPACIOS: ' WS-ESPACIOS
            DISPLAY 'OTROS   : ' WS-OTROS.
-           STOP RUN.
-           
+           STOP RUN. 
