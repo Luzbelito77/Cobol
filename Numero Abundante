@@ -1,0 +1,23 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. NumAbundante.
+       
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01 WS-ENTRADA        PIC Z(10) VALUE 18.
+       01 WS-SUMA           PIC 9(10) VALUE ZEROES.
+       01 WS-DIVISOR        PIC 9(10) VALUE ZEROES.
+      
+       PROCEDURE DIVISION
+      *se realiza el perform subiendo hasta llegar al numero de entrada 
+           PERFORM VARYING WS-DIVISOR FROM 1 BY 1 UNTIL WS-DIVISOR >= WS-ENTRADA
+               IF function mod(WS-ENTRADA WS-DIVISOR) = 0
+                   COMPUTE WS-SUMA = WS-SUMA + WS-DIVISOR
+               END-IF
+           END-PERFORM.
+      *si la suma de los divisores es mayor al numero en si, es abundante 
+           IF WS-SUMA > WS-ENTRADA
+               DISPLAY WS-ENTRADA," SI ES UN NUMERO ABUNDANTE"
+           ELSE
+               DISPLAY WS-ENTRADA," NO ES UN NUMERO ABUNDANTE"
+           END-IF.
+       STOP RUN.
