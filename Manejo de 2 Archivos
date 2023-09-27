@@ -1,0 +1,184 @@
+       IDENTIFICATION DIVISION.                                         00010001
+        PROGRAM-ID PGMTAB51.                                            00020099
+                                                                        00030021
+       ENVIRONMENT DIVISION.                                            00040000
+       CONFIGURATION SECTION.                                           00050009
+       INPUT-OUTPUT SECTION.                                            00060047
+       FILE-CONTROL.                                                    00070049
+           SELECT PRODUCTO ASSIGN DDPROD                                00080049
+                    FILE STATUS IS WS-PROD-CODE.                        00090041
+           SELECT PRECIO ASSIGN DDPREC                                  00100049
+                    FILE STATUS IS WS-PREC-CODE.                        00110027
+                                                                        00120048
+       DATA DIVISION.                                                   00130047
+       FILE SECTION.                                                    00140049
+                                                                        00150047
+       FD PRODUCTO                                                      00160051
+             BLOCK CONTAINS 0 RECORDS                                   00170053
+             RECORDING MODE IS F.                                       00180050
+       01 PROD-ENT              PIC X(32).                              00190049
+                                                                        00200047
+       FD PRECIO                                                        00210051
+             BLOCK CONTAINS 0 RECORDS                                   00220053
+             RECORDING MODE IS F.                                       00230050
+       01 PRECIO-ENT            PIC X(07).                              00240044
+                                                                        00250047
+       WORKING-STORAGE SECTION.                                         00260044
+                                                                        00270021
+       77 FILLER      PIC X(26) VALUE '* INICIO WORKING-STORAGE *'.     00280044
+       77 WS-CONT           PIC 99 VALUE 1.                             00290044
+       77 WS-FIN-PROD       PIC 9  VALUE ZEROES.                        00300047
+       77 WS-FIN-PREC       PIC 9  VALUE ZEROES.                        00310047
+       77 WS-PROD-CODE      PIC XX VALUE SPACES.                        00320047
+       77 WS-PREC-CODE      PIC XX VALUE SPACES.                        00330046
+       77 WS-I              PIC 99 VALUE ZEROES.                        00340052
+       77 WS-MAX            PIC 99 VALUE 13.                            00350099
+                                                                        00360039
+       01 REG-PRODUCTO.                                                 00370051
+         03 COD-PRODUCTO1  PIC 99.                                      00380053
+         03 DENOMINACION   PIC X(30).                                   00390044
+                                                                        00400047
+       01 REG-PRECIOS.                                                  00410044
+         03 COD-PRODUCTO2  PIC 99.                                      00420053
+         03 PRECIOS        PIC 9(3)V99.                                 00430045
+                                                                        00440037
+       01 WS-VECTOR.                                                    00450051
+         05 WS-ITEM OCCURS 10 TIMES.                                    00460044
+           10 WS-PROD      PIC 99.                                      00470049
+           10 WS-DENOMINACION PIC X(30).                                00480049
+           10 WS-PRECIO     PIC 9(3)V99.                                00490049
+       01 WS-PRECIO-DISP    PIC $ZZ9.99.                                00491079
+                                                                        00492079
+       77  FILLER          PIC X(26) VALUE '* FINAL  WORKING-STORAGE *'.00500038
+                                                                        00510000
+      ***************************************************************.  00520000
+       PROCEDURE DIVISION.                                              00530000
+      **************************************                            00540000
+      *                                    *                            00550000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00560000
+      *                                    *                            00570000
+      **************************************                            00580000
+       MAIN-PROGRAM-INICIO.                                             00590001
+                                                                        00600000
+           PERFORM 1000-I-INICIO  THRU                                  00610047
+                   1000-F-INICIO.                                       00620047
+                                                                        00630001
+           PERFORM 2000-I-PRODUCTO THRU                                 00640047
+                   2000-F-PRODUCTO UNTIL (WS-FIN-PROD = 1).             00650099
+                                                                        00660001
+           PERFORM 3000-I-PRECIO   THRU                                 00670047
+                   3000-F-PRECIO   UNTIL (WS-FIN-PREC = 1).             00680099
+                                                                        00690047
+           PERFORM 9999-I-FINAL    THRU                                 00700048
+                   9999-F-FINAL.                                        00710048
+                                                                        00720001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      00730001
+                                                                        00740001
+       1000-I-INICIO.                                                   00750051
+                                                                        00760027
+      *REVISAR FILE STATUS PRODUCTO                                     00770048
+                                                                        00780027
+           OPEN INPUT PRODUCTO.                                         00790050
+           EVALUATE WS-PROD-CODE                                        00800047
+            WHEN '00'                                                   00810063
+             CONTINUE                                                   00820063
+            WHEN OTHER                                                  00830063
+             DISPLAY 'ERROR EN LA APER DE ARCH PROD FS=' WS-PROD-CODE   00840063
+             MOVE 1 TO WS-FIN-PROD                                      00850063
+           END-EVALUATE.                                                00860051
+      *REVISAR FILE STATUS PRECIO                                       00870048
+                                                                        00880078
+           OPEN INPUT PRECIO.                                           00890050
+           EVALUATE WS-PREC-CODE                                        00900047
+             WHEN '00'                                                  00910063
+              CONTINUE                                                  00920063
+             WHEN OTHER                                                 00930063
+              DISPLAY 'ERROR EN LA APER DE ARCH PRECIO FS=' WS-PREC-CODE00940063
+              MOVE 1 TO WS-FIN-PREC                                     00950063
+           END-EVALUATE.                                                00960051
+                                                                        00970078
+       1000-F-INICIO.   EXIT.                                           00980099
+                                                                        00990099
+      **************************************                            01020000
+      *                                    *                            01030000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            01040000
+      *                                    *                            01050000
+      **************************************                            01060000
+       2000-I-PRODUCTO.                                                 01070047
+                                                                        01080000
+      * COMIENZO A LEER PRODUCTOS                                       01090046
+                                                                        01100035
+           PERFORM VARYING WS-I FROM 1 BY 1 UNTIL (WS-I = WS-MAX)       01101099
+            READ PRODUCTO INTO REG-PRODUCTO                             01110099
+      *     END-READ                                                    01111099
+              EVALUATE WS-PROD-CODE                                     01120044
+                WHEN '00'                                               01130044
+                  MOVE COD-PRODUCTO1 TO WS-PROD(WS-I)                   01140080
+                  MOVE DENOMINACION  TO WS-DENOMINACION(WS-I)           01150080
+                  MOVE ZEROS         TO WS-PRECIO(WS-I)                 01160099
+                WHEN '10'                                               01170044
+                  MOVE 1 TO WS-FIN-PROD                                 01171093
+                  CONTINUE                                              01180044
+                WHEN OTHER                                              01190044
+                 DISPLAY 'ERROR EN EL ARCHIVO PRODUCTO FS=' WS-PROD-CODE01200063
+                 MOVE 1 TO WS-FIN-PROD                                  01210063
+              END-EVALUATE                                              01220099
+           END-PERFORM.                                                 01222099
+                                                                        01223099
+       2000-F-PRODUCTO. EXIT.                                           01240051
+                                                                        01250047
+       3000-I-PRECIO.                                                   01260051
+                                                                        01270047
+      ***COMIENZO LECTURA PRECIOS Y MOVIMIENTO A TABLA                  01280038
+                                                                        01290038
+            PERFORM VARYING WS-I FROM 1 BY 1 UNTIL (WS-I = WS-MAX)      01291099
+             READ PRECIO INTO REG-PRECIOS                               01300099
+              EVALUATE WS-PREC-CODE                                     01310099
+               WHEN '00'                                                01320099
+                IF WS-PROD(WS-I) = COD-PRODUCTO2                        01390099
+                 MOVE PRECIOS TO WS-PRECIO(WS-I)                        01400099
+               ELSE                                                     01410099
+                MOVE 1 TO WS-FIN-PREC                                   01411099
+                 CONTINUE                                               01420099
+                END-IF                                                  01430099
+               WHEN '10'                                                01450099
+                DISPLAY 'ERROR EN EL ARCHIVO PRECIO FS=' WS-PREC-CODE   01460099
+                MOVE 1 TO WS-FIN-PREC                                   01470099
+               END-EVALUATE                                             01480099
+            END-PERFORM.                                                01481099
+      *    END-READ.                                                    01490099
+                                                                        01500038
+       3000-F-PRECIO. EXIT.                                             01510047
+                                                                        01520000
+      **************************************                            01530000
+      *                                    *                            01540000
+      *  CUERPO FINAL MUESTRA RESULTADO    *                            01550000
+      *                                    *                            01560000
+      **************************************                            01570000
+       9999-I-FINAL.                                                    01580048
+                                                                        01590000
+           CLOSE PRODUCTO.                                              01600051
+           CLOSE PRECIO.                                                01610051
+           IF WS-FIN-PREC NOT = 1 OR WS-FIN-PROD NOT = 1                01620099
+            DISPLAY 'NO SE PUEDE REALIZAR LA EJECUCION'                 01621067
+           ELSE                                                         01630065
+             IF WS-PROD-CODE = 00 AND WS-PREC-CODE = 00                 01640068
+              PERFORM VARYING WS-I FROM 1 BY 1 UNTIL WS-I > WS-MAX      01650068
+                DISPLAY '******************************'                01660076
+                DISPLAY 'CODIGO DEL PRODUCTO: ' WS-PROD(WS-I)           01661077
+                DISPLAY 'DENOMINACION: ' WS-DENOMINACION(WS-I)          01662077
+                MOVE WS-PRECIO(WS-I) TO WS-PRECIO-DISP                  01662181
+                DISPLAY 'PRECIO: ' WS-PRECIO-DISP                       01663099
+                DISPLAY '******************************'                01664076
+              END-PERFORM                                               01670068
+             ELSE                                                       01680068
+               IF WS-PROD-CODE NOT = 00                                 01690068
+                DISPLAY 'ERROR  CIERRE DE ARCH-PROD FS=' WS-PROD-CODE   01700068
+               END-IF                                                   01710068
+               IF WS-PREC-CODE NOT = 00                                 01720068
+                DISPLAY 'ERROR  CIERRE DE ARCH-PREC FS=' WS-PREC-CODE   01730068
+               END-IF                                                   01740068
+             END-IF.                                                    01750068
+      *    END-IF.                                                      01760069
+                                                                        01761076
+       9999-F-FINAL.  EXIT.                                             01770048

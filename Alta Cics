@@ -1,0 +1,287 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PGMALT51.
+       DATA DIVISION.
+       FILE SECTION.
+       WORKING-STORAGE SECTION.
+
+       01  WS-RESP       PIC S9(04) COMP.
+       01  WS-LONG       PIC S9(04) COMP.
+       01  WS-EXIT       PIC X(30)  VALUE ' FIN TRANSACCION T351'.
+       01  WS-ERROR      PIC X(30)  VALUE 'TECLA ERRONEA  '.
+
+       01  WS-DATOS.
+          03 WS-CLAVE.
+            05 WS-TIPDAT   PIC XX             VALUE SPACES.
+            05 WS-NUMDAT   PIC 9(11)          VALUE ZEROES.
+          03 WS-NOMDAT   PIC X(30)          VALUE SPACES.
+          03 WS-SEXDAT   PIC X(01)          VALUE SPACES.
+          03 WS-FECDAT.
+             05 WS-ANIO  PIC 9(4)           VALUE ZEROES.
+             05 WS-MES   PIC 9(2)           VALUE ZEROES.
+             05 WS-DIA   PIC 9(2)           VALUE ZEROES.
+          03 FILLER      PIC X(108)         VALUE SPACES.
+
+      *VARIABLES PARA FECHA
+       01 WS-ABSTIME        PIC S9(16) COMP VALUE +0.
+       01 WS-FECHA          PIC X(10)       VALUE SPACES.
+       01 WS-SEP-FEC        PIC X           VALUE '/'.
+
+
+       01 WS-DATASET-LEN       PIC S9(04) COMP VALUE 160.
+
+       COPY MAP0351.
+       COPY DFHAID.
+       COPY DFHBMSCA.
+
+       01  REG-PERSONA.
+           03  PER-TIP-DOC            PIC X(02).
+           03  PER-NRO-DOC            PIC 9(11).
+           03  PER-CLI-NRO            PIC 9(03).
+           03  PER-NOMAPE             PIC X(30).
+           03  PER-CLI-AAAAMMDD       PIC 9(08).
+           03  PER-DIRECCION          PIC X(30).
+           03  PER-LOCALIDAD          PIC X(15).
+           03  PER-EMAIL              PIC X(30).
+           03  PER-TELEFONO           PIC X(15).
+           03  PER-SEXO               PIC X    .
+           03  FILLER                 PIC X(15).
+       01  WS-VAL-ERROR         PIC X.
+           88  WS-VAL-OK                         VALUE 'Y'.
+           88  WS-VAL-NO-OK                      VALUE 'N'.
+
+       PROCEDURE DIVISION.
+
+       MAIN-PROGRAM.
+
+           PERFORM 1000-I-INICIO THRU 1000-F-INICIO.
+
+           PERFORM 2000-I-PROCESO THRU 2000-F-PROCESO.
+
+           PERFORM 9999-I-FINAL   THRU 9999-F-FINAL.
+
+       1000-I-INICIO.
+
+      * SE INICIALIZA EL MAPA Y SE MUESTRA EN PANTALLA
+           IF EIBCALEN = 0
+           MOVE LOW-VALUES TO MAP0351O
+           MOVE 'INGRESE LOS DATOS Y PRESIONE ENTER' TO MSGO
+           MOVE LENGTH OF MAP0351O TO WS-LONG
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+           EXEC CICS
+                SEND MAP ('MAP0351')
+                MAPSET ('MAP0351')
+                LENGTH (WS-LONG)
+                ERASE
+                FREEKB
+           END-EXEC
+            MOVE LENGTH OF MAP0351O TO WS-LONG
+            MOVE LOW-VALUES   TO MAP0351O
+            MOVE 'INGRESE LOS DATOS Y PRESIONE ENTER' TO MSGO
+            PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+           END-IF.
+
+       1000-F-INICIO. EXIT.
+
+       2000-I-PROCESO.
+
+      *SE RECIBEN LOS DATOS INGRESADOS Y SE EVALUA LA TECLA PRESIONADA
+               EXEC CICS
+                    RECEIVE MAP    ('MAP0351')
+                            MAPSET ('MAP0351')
+                            INTO   (MAP0351I)
+               END-EXEC
+           EVALUATE EIBAID
+             WHEN DFHENTER
+               PERFORM 3000-I-ENTER  THRU  3000-F-ENTER
+             WHEN DFHPF3
+               PERFORM 3100-I-PF3    THRU  3100-F-PF3
+             WHEN DFHPF12
+               PERFORM 3200-I-PF12   THRU  3200-F-PF12
+             WHEN OTHER
+               PERFORM 3300-I-OTHER  THRU  3300-F-OTHER
+           END-EVALUATE.
+
+       2000-F-PROCESO. EXIT.
+
+       3000-I-ENTER.
+
+      *SE EVALUAN LOS DATOS INGRESADOS
+           MOVE TIPDOCI TO WS-TIPDAT
+           MOVE NUMDOCI TO WS-NUMDAT
+           MOVE NOMAPEI TO WS-NOMDAT
+           MOVE DIAI    TO WS-DIA
+           MOVE MESI    TO WS-MES
+           MOVE ANIOI   TO WS-ANIO
+           MOVE SEXOI   TO WS-SEXDAT
+
+           PERFORM 5000-I-VALIDAR THRU 5000-F-VALIDAR
+           PERFORM 6000-I-FECHA   THRU 6000-F-FECHA
+           PERFORM 7000-I-GRABAR  THRU 7000-F-GRABAR
+           EXEC CICS
+              SEND MAP ('MAP0351')
+              MAPSET ('MAP0351')
+              FROM (MAP0351O)
+              LENGTH (WS-LONG)
+              ERASE
+           END-EXEC.
+
+       3000-F-ENTER. EXIT.
+
+       3100-I-PF3.
+
+      *SE LIMPIA LA PANTALLA
+           MOVE LOW-VALUES TO  MAP0351O.
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA.
+           EXEC CICS
+              SEND MAP ('MAP0351')
+              MAPSET ('MAP0351')
+              FROM (MAP0351O)
+              LENGTH (WS-LONG)
+              ERASE
+           END-EXEC.
+
+       3100-F-PF3. EXIT.
+
+       3200-I-PF12.
+
+           EXEC CICS
+              LINK PROGRAM('PGMMEN51')
+           END-EXEC.
+
+       3200-F-PF12. EXIT.
+
+       3300-I-OTHER.
+
+      *SI PRESIONO OTRA TECLA MUESTRA UNA PANTALLA DE ERROR
+           MOVE WS-ERROR TO MSGO
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA.
+           EXEC CICS
+              SEND MAP ('MAP0351')
+              MAPSET ('MAP0351')
+              FROM (MAP0351O)
+              LENGTH (WS-LONG)
+              ERASE
+           END-EXEC.
+
+       3300-F-OTHER. EXIT.
+
+       5000-I-VALIDAR.
+
+           SET WS-VAL-OK TO TRUE
+           IF WS-NUMDAT IS NUMERIC
+              CONTINUE
+           ELSE
+           MOVE 'ERROR EN EL CAMPO NUMERO DOCUMENTO'  TO MSGO
+              SET WS-VAL-NO-OK TO TRUE
+           END-IF
+           IF WS-TIPDAT  = 'DU' OR 'PA' OR 'PE'
+              CONTINUE
+           ELSE
+           MOVE 'ERROR EN EL CAMPO TIPO DOCUMENTO'  TO MSGO
+              SET WS-VAL-NO-OK TO TRUE
+           END-IF
+           IF WS-NOMDAT  NOT EQUAL SPACES
+              CONTINUE
+           ELSE
+           MOVE 'ERROR EN EL CAMPO NOMBRE Y APELLIDO'  TO MSGO
+              SET WS-VAL-NO-OK TO TRUE
+           END-IF
+           IF WS-SEXDAT  = 'M' OR 'F' OR 'O'
+              CONTINUE
+           ELSE
+           MOVE 'ERROR EN EL CAMPO SEXO'  TO MSGO
+              SET WS-VAL-NO-OK TO TRUE
+           END-IF
+
+           IF WS-ANIO < '2023' AND WS-ANIO > '1900'
+             IF WS-MES = '04' OR '06' OR '09' OR '11'
+               IF WS-DIA < '31'
+                 CONTINUE
+               ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO FECHA'  TO MSGO
+               END-IF
+             ELSE
+              IF WS-MES = '02'
+               IF WS-DIA < '29'
+                 CONTINUE
+               ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO FECHA'  TO MSGO
+              ELSE
+               IF WS-DIA < '32'
+                 CONTINUE
+               ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO FECHA'  TO MSGO
+               END-IF
+             END-IF
+           ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO FECHA'  TO MSGO
+           END-IF.
+
+
+       5000-F-VALIDAR. EXIT.
+
+       6000-I-FECHA.
+
+           EXEC CICS ASKTIME
+             ABSTIME (WS-ABSTIME)
+           END-EXEC.
+
+           EXEC CICS FORMATTIME
+             ABSTIME (WS-ABSTIME)
+             DDMMYYYY (WS-FECHA) DATESEP(WS-SEP-FEC)
+           END-EXEC.
+
+           MOVE WS-FECHA TO FECHAO.
+
+       6000-F-FECHA. EXIT.
+
+       7000-I-GRABAR.
+
+      *SE LEE EL VSAM BUSCANDO EL REGISTRO PEDIDO
+           IF WS-VAL-OK
+
+               MOVE WS-TIPDAT      TO  PER-TIP-DOC
+               MOVE WS-NUMDAT      TO  PER-NRO-DOC
+               MOVE WS-NOMDAT      TO  PER-NOMAPE
+               MOVE WS-FECDAT      TO  PER-CLI-AAAAMMDD
+               MOVE WS-SEXDAT      TO  PER-SEXO
+
+              EXEC CICS WRITE
+                 FILE      ('PERSO51')
+                 FROM      (REG-PERSONA)
+                 RIDFLD    (WS-DATOS)
+                 LENGTH    (WS-DATASET-LEN)
+                 KEYLENGTH (13)
+                 RESP      (WS-RESP)
+
+
+              END-EXEC
+              EVALUATE WS-RESP
+
+              WHEN DFHRESP(DUPREC)
+               MOVE 'CLIENTE EXISTENTE'        TO  MSGO
+
+              WHEN DFHRESP(NORMAL)
+      *CLIENTE NO ENCONTRADO, SE PROCEDE A GRABAR LA INFORMACION
+               MOVE 'CLIENTE DADO DE ALTA'           TO  MSGO
+               MOVE LENGTH OF MAP0351O             TO  WS-LONG
+
+              WHEN OTHER
+               MOVE 'ERROR EN LECTURA DEL ARCHIVO' TO  MSGO
+              END-EVALUATE
+           END-IF.
+
+       7000-F-GRABAR. EXIT.
+
+       9999-I-FINAL.
+
+           EXEC CICS
+                RETURN
+                TRANSID  ('T351')
+           END-EXEC.
+
+       9999-F-FINAL. EXIT.

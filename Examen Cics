@@ -1,0 +1,477 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PGMPRU51.
+       DATA DIVISION.
+       FILE SECTION.
+       WORKING-STORAGE SECTION.
+
+       01  WS-RESP       PIC S9(04) COMP.
+       01  WS-LONG       PIC S9(04) COMP.
+       01  WS-EXIT       PIC X(30)  VALUE ' FIN TRANSACCION T151'.
+       01  WS-ERROR      PIC X(30)  VALUE 'TECLA ERRONEA  '.
+
+       01  WS-DATOS.
+          03 WS-CLAVE.
+            05 WS-TIPDAT   PIC XX           VALUE SPACES.
+            05 WS-NUMDAT   PIC 9(11)        VALUE ZEROES.
+          03 WS-NOMDAT   PIC X(30)          VALUE SPACES.
+          03 WS-SEXDAT   PIC X(01)          VALUE SPACES.
+          03 WS-FECDAT.
+             05 WS-ANIO  PIC 9(4)           VALUE ZEROES.
+             05 WS-MES   PIC 9(2)           VALUE ZEROES.
+             05 WS-DIA   PIC 9(2)           VALUE ZEROES.
+          03 FILLER      PIC X(108)         VALUE SPACES.
+
+      *VARIABLES PARA FECHA
+       01 WS-ABSTIME        PIC S9(16) COMP VALUE +0.
+       01 WS-FECHA          PIC X(10)       VALUE SPACES.
+       01 WS-SEP-FEC        PIC X           VALUE '/'.
+       01  WS-VAL-ERROR         PIC X.
+           88  WS-VAL-OK                         VALUE 'Y'.
+           88  WS-VAL-NO-OK                      VALUE 'N'.
+       01 WS-DATASET-LEN       PIC S9(04) COMP VALUE 160.
+
+       COPY MAP0151.
+       COPY DFHAID.
+       COPY DFHBMSCA.
+
+       01  REG-PERSONA.
+           03  PER-TIP-DOC            PIC X(02).
+           03  PER-NRO-DOC            PIC 9(11).
+           03  PER-CLI-NRO            PIC 9(03).
+           03  PER-NOMAPE             PIC X(30).
+           03  PER-CLI-AAAAMMDD       PIC 9(08).
+           03  PER-DIRECCION          PIC X(30).
+           03  PER-LOCALIDAD          PIC X(15).
+           03  PER-EMAIL              PIC X(30).
+           03  PER-TELEFONO           PIC X(15).
+           03  PER-SEXO               PIC X    .
+           03  FILLER                 PIC X(15).
+
+       LINKAGE SECTION.
+
+          01 DFHCOMMAREA PIC X(20).
+
+       PROCEDURE DIVISION USING DFHCOMMAREA.
+
+       MAIN-PROGRAM.
+
+           PERFORM 1000-I-INICIO THRU 1000-F-INICIO.
+
+           PERFORM 2000-I-PROCESO THRU 2000-F-PROCESO.
+
+           PERFORM 9999-I-FINAL   THRU 9999-F-FINAL.
+
+       1000-I-INICIO.
+
+           MOVE DFHCOMMAREA TO WS-DATOS
+
+      * SE INICIALIZA EL MAPA Y SE MUESTRA EN PANTALLA
+           IF EIBCALEN = 0
+             MOVE LOW-VALUES TO MAP0151O
+             MOVE 'INGRESE LOS DATOS Y PRESIONE ENTER' TO MSGO
+             MOVE LENGTH OF MAP0151O TO WS-LONG
+             PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+             EXEC CICS
+                  SEND MAP ('MAP0151')
+                  MAPSET ('MAP0151')
+                  LENGTH (WS-LONG)
+                  ERASE
+                  FREEKB
+             END-EXEC
+           END-IF.
+
+       1000-F-INICIO. EXIT.
+
+       2000-I-PROCESO.
+
+      *SE RECIBEN LOS DATOS INGRESADOS Y SE EVALUA LA TECLA PRESIONADA
+               EXEC CICS
+                    RECEIVE MAP    ('MAP0151')
+                            MAPSET ('MAP0151')
+                            INTO   (MAP0151I)
+               END-EXEC
+           EVALUATE EIBAID
+             WHEN DFHENTER
+               PERFORM 3000-I-ENTER  THRU  3000-F-ENTER
+             WHEN DFHPF3
+               PERFORM 3100-I-PF3    THRU  3100-F-PF3
+              WHEN DFHPF4
+                PERFORM 3150-I-PF    THRU 3150-F-PF
+              WHEN DFHPF5
+                PERFORM 3150-I-PF    THRU 3150-F-PF
+             WHEN DFHPF12
+               PERFORM 3400-I-PF12   THRU  3400-F-PF12
+             WHEN OTHER
+               PERFORM 3500-I-OTHER  THRU  3500-F-OTHER
+           END-EVALUATE.
+
+       2000-F-PROCESO. EXIT.
+
+       3000-I-ENTER.
+
+      *SE EVALUAN LOS DATOS INGRESADOS
+           MOVE TIPDOCI TO WS-TIPDAT
+           MOVE NUMDOCI TO WS-NUMDAT
+
+           IF WS-TIPDAT =  'DU' OR 'PA' OR 'PE'
+               IF WS-NUMDAT IS NUMERIC
+                 PERFORM 4000-I-LEER THRU 4000-F-LEER
+               ELSE
+           MOVE LOW-VALUES TO MAP0151O
+                   IF WS-TIPDAT = ZEROES
+                      MOVE 'CAMPO TIPDOC VACIO, REINGRESE' TO MSGO
+                   ELSE
+                MOVE 'DATOS INGRESADOS INCORRECTOS - REINGRESE' TO MSGO
+                   END-IF
+               END-IF
+           ELSE
+           MOVE LOW-VALUES TO MAP0151O
+              IF WS-TIPDAT = SPACES
+                MOVE 'CAMPO NUMDOC VACIO, REINGRESE' TO MSGO
+              ELSE
+                MOVE 'DATOS INGRESADOS INCORRECTOS - REINGRESE' TO MSGO
+              END-IF
+           END-IF
+
+           MOVE WS-TIPDAT TO TIPDOCO
+           MOVE WS-NUMDAT TO NUMDOCO
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA.
+
+           EXEC CICS
+              SEND MAP ('MAP0151')
+              MAPSET ('MAP0151')
+              FROM (MAP0151O)
+              LENGTH (WS-LONG)
+              ERASE
+           END-EXEC.
+
+       3000-F-ENTER. EXIT.
+
+       3100-I-PF3.
+
+      *SE LIMPIA LA PANTALLA
+           MOVE LOW-VALUES TO  MAP0151O.
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+           EXEC CICS
+                SEND MAP ('MAP0151')
+                MAPSET ('MAP0151')
+                FROM (MAP0151O)
+                LENGTH (WS-LONG)
+                ERASE
+                FREEKB
+           END-EXEC.
+
+       3100-F-PF3. EXIT.
+
+       3150-I-PF.
+
+           MOVE 'PRIMERO REALICE UNA CONSULTA PARA MODIFICAR' TO MSGO.
+           EXEC CICS
+                SEND MAP ('MAP0151')
+                MAPSET ('MAP0151')
+                FROM (MAP0151O)
+                LENGTH (WS-LONG)
+                FREEKB
+           END-EXEC.
+
+       3150-F-PF. EXIT.
+
+       3200-I-PF4.
+
+           MOVE -1             TO NOMAP2L
+           MOVE DFHBMFSE       TO NOMAP2A
+           MOVE 'MODIFIQUE LOS CAMPOS NOMAPE Y APRETE F6' TO MSGO
+           EXEC CICS
+                SEND MAP ('MAP0151')
+                MAPSET ('MAP0151')
+                FROM (MAP0151O)
+                LENGTH (WS-LONG)
+                CURSOR
+                FREEKB
+           END-EXEC
+           EXEC CICS
+               RECEIVE MAP    ('MAP0151')
+               MAPSET ('MAP0151')
+               INTO   (MAP0151I)
+           END-EXEC
+           MOVE NOMAP2I TO WS-NOMDAT
+           IF WS-NOMDAT  NOT EQUAL SPACES
+              MOVE WS-NOMDAT       TO PER-NOMAPE
+            EVALUATE EIBAID
+              WHEN DFHPF6
+      *       EXEC CICS
+      *        READ DATASET ('PERSO51')
+      *             RIDFLD (WS-DATOS)
+      *             INTO (REG-PERSONA)
+      *             LENGTH (WS-DATASET-LEN)
+      *             EQUAL
+      *             UPDATE
+      *             RESP (WS-RESP)
+      *        END-EXEC
+              EXEC CICS
+                REWRITE FILE('PERSO51')
+                FROM (REG-PERSONA)
+                LENGTH (WS-DATASET-LEN)
+                RESP (WS-RESP)
+              END-EXEC
+
+                EVALUATE WS-RESP
+                 WHEN DFHRESP(NORMAL)
+                   MOVE 'CLIENTE MODIFICADO PRESIONE ENTER' TO MSGO
+                    EVALUATE EIBAID
+                     WHEN DFHENTER
+                        MOVE LOW-VALUES TO MAP0151O
+                        MOVE LOW-VALUES TO MAP0151I
+                        EXEC CICS
+                             SEND MAP ('MAP0151')
+                             MAPSET ('MAP0151')
+                             LENGTH (WS-LONG)
+                             ERASE
+                             FREEKB
+                        END-EXEC
+                     WHEN OTHER
+                        MOVE 'PRESIONE ENTER PARA CONTINUAR' TO MSGO
+                    END-EVALUATE
+                 WHEN OTHER
+                    MOVE 'ERROR EN MODIFICACION PRESIONE ENTER' TO  MSGO
+                END-EVALUATE
+            WHEN OTHER
+              MOVE 'TECLA ERRONEA, SE CANCELA LA MODIFICACION' TO MSGO
+            END-EVALUATE
+           ELSE
+             MOVE 'ERROR EN EL CAMPO NOMBRE Y APELLIDO'  TO MSGO
+           END-IF
+           PERFORM 6000-I-FECHA
+              THRU 6000-F-FECHA.
+           EXEC CICS
+                SEND MAP ('MAP0151')
+                MAPSET ('MAP0151')
+                FROM (MAP0151O)
+                LENGTH (WS-LONG)
+                CURSOR
+                FREEKB
+           END-EXEC.
+
+       3200-F-PF4. EXIT.
+
+       3300-I-PF5.
+
+           MOVE -1             TO DIA2L
+           MOVE DFHBMFSE       TO DIA2A
+           MOVE DFHBMFSE       TO MES2A
+           MOVE DFHBMFSE       TO ANIO2A
+           MOVE 'MODIFIQUE LOS CAMPOS FECHA  Y APRETE F6' TO MSGO
+           EXEC CICS
+                SEND MAP ('MAP0151')
+                MAPSET ('MAP0151')
+                FROM (MAP0151O)
+                LENGTH (WS-LONG)
+                CURSOR
+                FREEKB
+           END-EXEC
+           EXEC CICS
+               RECEIVE MAP    ('MAP0151')
+               MAPSET ('MAP0151')
+               INTO   (MAP0151I)
+           END-EXEC
+           MOVE DIA2I          TO WS-DIA
+           MOVE MES2I          TO WS-MES
+           MOVE ANIO2I         TO WS-ANIO
+           PERFORM 3350-I-VALIDAR THRU 3350-F-VALIDAR
+           IF WS-VAL-OK
+              MOVE WS-FECDAT       TO PER-CLI-AAAAMMDD
+            EVALUATE EIBAID
+              WHEN DFHPF6
+              EXEC CICS
+                REWRITE FILE('PERSO51')
+                FROM (REG-PERSONA)
+                LENGTH (WS-DATASET-LEN)
+                RESP (WS-RESP)
+              END-EXEC
+
+                EVALUATE WS-RESP
+                 WHEN DFHRESP(NORMAL)
+                   MOVE 'CLIENTE MODIFICADO PRESIONE ENTER' TO MSGO
+                    EVALUATE EIBAID
+                     WHEN DFHENTER
+                        MOVE LOW-VALUES TO MAP0151O
+                        MOVE LOW-VALUES TO MAP0151I
+                        EXEC CICS
+                             SEND MAP ('MAP0151')
+                             MAPSET ('MAP0151')
+                             LENGTH (WS-LONG)
+                             ERASE
+                             FREEKB
+                        END-EXEC
+                     WHEN OTHER
+                        MOVE 'PRESIONE ENTER PARA CONTINUAR' TO MSGO
+                    END-EVALUATE
+                 WHEN OTHER
+                    MOVE 'ERROR EN MODIFICACION PRESIONE ENTER' TO  MSGO
+                END-EVALUATE
+            WHEN OTHER
+              MOVE 'TECLA ERRONEA, SE CANCELA LA MODIFICACION' TO MSGO
+            END-EVALUATE
+           ELSE
+             MOVE 'ERROR EN EL CAMPO FECHA'  TO MSGO
+           END-IF
+           PERFORM 6000-I-FECHA
+              THRU 6000-F-FECHA.
+           EXEC CICS
+                SEND MAP ('MAP0151')
+                MAPSET ('MAP0151')
+                FROM (MAP0151O)
+                LENGTH (WS-LONG)
+                CURSOR
+                FREEKB
+           END-EXEC.
+
+
+       3300-F-PF5. EXIT.
+
+       3350-I-VALIDAR.
+
+           SET WS-VAL-OK TO TRUE
+           IF WS-ANIO < '2023' AND WS-ANIO > '1900'
+            IF WS-MES < '13' AND WS-MES > '0'
+            CONTINUE
+             IF WS-MES = '04' OR '06' OR '09' OR '11'
+               IF WS-DIA < '31'
+                 CONTINUE
+               ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO DIA'  TO MSGO
+               END-IF
+             ELSE
+              IF WS-MES = '02'
+               IF WS-DIA < '29'
+                 CONTINUE
+               ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO DIA'  TO MSGO
+              ELSE
+               IF WS-DIA < '32'
+                 CONTINUE
+               ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO DIA'  TO MSGO
+               END-IF
+             END-IF
+            ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO MES'  TO MSGO
+            END-IF
+           ELSE
+                 SET WS-VAL-NO-OK TO TRUE
+                 MOVE 'ERROR EN EL CAMPO A�O'  TO MSGO
+           END-IF.
+
+       3350-F-VALIDAR. EXIT.
+
+       3400-I-PF12.
+
+           EXEC CICS
+              LINK PROGRAM('PGMMEN51')
+           END-EXEC.
+
+       3400-F-PF12. EXIT.
+
+       3500-I-OTHER.
+
+      *SI PRESIONO OTRA TECLA MUESTRA UNA PANTALLA DE ERROR
+           MOVE WS-ERROR TO MSGO
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+           EXEC CICS
+                SEND MAP ('MAP0151')
+                MAPSET ('MAP0151')
+                FROM (MAP0151O)
+                LENGTH (WS-LONG)
+                ERASE
+           END-EXEC.
+
+       3500-F-OTHER. EXIT.
+
+       4000-I-LEER.
+
+      *SE LEE EL VSAM BUSCANDO EL REGISTRO PEDIDO
+           EXEC CICS
+            READ DATASET ('PERSO51')
+                 RIDFLD (WS-DATOS)
+                 INTO (REG-PERSONA)
+                 LENGTH (WS-DATASET-LEN)
+                 EQUAL
+                 UPDATE
+                 RESP (WS-RESP)
+            END-EXEC
+              EVALUATE WS-RESP
+
+              WHEN DFHRESP(NORMAL)
+      *REGISTRO ENCONTRADO, SE MUEVE LA INFORMACION DEL MISMO AL MAPA
+               MOVE 'CLIENTE ENCONTRADO'           TO  MSGO
+               MOVE PER-CLI-NRO                    TO  NROCLIO
+               MOVE PER-NOMAPE                     TO  NOMAP1O
+               MOVE PER-EMAIL                      TO  EMAILO
+               MOVE PER-SEXO                       TO  SEXOO
+               MOVE PER-NOMAPE                     TO  NOMAP1O
+               MOVE PER-CLI-AAAAMMDD               TO  WS-FECDAT
+               MOVE WS-DIA                         TO  DIA1O
+               MOVE WS-MES                         TO  MES1O
+               MOVE WS-ANIO                        TO  ANIO1O
+               MOVE LENGTH OF MAP0151O             TO  WS-LONG
+               EXEC CICS
+                  SEND MAP ('MAP0151')
+                  MAPSET ('MAP0151')
+                  FROM (MAP0151O)
+                  LENGTH (WS-LONG)
+               END-EXEC
+
+               EXEC CICS
+                    RECEIVE MAP    ('MAP0151')
+                            MAPSET ('MAP0151')
+                            INTO   (MAP0151I)
+               END-EXEC
+                EVALUATE EIBAID
+                 WHEN DFHPF3
+                   PERFORM 3100-I-PF3   THRU 3100-F-PF3
+                 WHEN DFHPF4
+                   PERFORM 3200-I-PF4   THRU 3200-F-PF4
+                 WHEN DFHPF5
+                   PERFORM 3300-I-PF5   THRU 3300-F-PF5
+                 WHEN DFHPF12
+                   PERFORM 3400-I-PF12  THRU 3400-F-PF12
+                 WHEN OTHER
+                   PERFORM 3500-I-OTHER THRU 3500-F-OTHER
+                END-EVALUATE
+
+              WHEN DFHRESP(NOTFND)
+               MOVE LOW-VALUES TO  MAP0151O
+               MOVE 'CLIENTE NO ENCONTRADO'        TO  MSGO
+              WHEN OTHER
+               MOVE 'ERROR EN LECTURA DEL ARCHIVO' TO  MSGO
+              END-EVALUATE.
+
+       4000-F-LEER. EXIT.
+
+       6000-I-FECHA.
+
+           EXEC CICS ASKTIME
+             ABSTIME (WS-ABSTIME)
+           END-EXEC.
+
+           EXEC CICS FORMATTIME
+             ABSTIME (WS-ABSTIME)
+             DDMMYYYY (WS-FECHA) DATESEP(WS-SEP-FEC)
+           END-EXEC.
+
+           MOVE WS-FECHA TO FECHAO.
+
+       6000-F-FECHA. EXIT.
+
+       9999-I-FINAL.
+
+           EXEC CICS
+                RETURN
+                TRANSID ('T151')
+           END-EXEC.
+
+       9999-F-FINAL. EXIT.

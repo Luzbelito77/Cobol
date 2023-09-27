@@ -1,0 +1,369 @@
+       IDENTIFICATION DIVISION.                                         00010029
+        PROGRAM-ID PGMAPS51.                                            00020099
+      **************************************                            00040029
+      *APAREO DE 2 TABLAS Y CREACION DE UNA*                            00050093
+      **************************************                            00060029
+      *  FECHA   *    DETALLE        * COD *                            00070029
+      **************************************                            00080029
+      *          *                   *     *                            00090029
+      * 06-10-22 * EJERCICIO 26      *     *                            00100099
+      *          *                   *     *                            00110029
+      **************************************                            00120029
+       ENVIRONMENT DIVISION.                                            00130029
+       CONFIGURATION SECTION.                                           00140029
+       SPECIAL-NAMES.                                                   00150069
+           DECIMAL-POINT IS COMMA.                                      00160070
+                                                                        00170070
+       INPUT-OUTPUT SECTION.                                            00180029
+       FILE-CONTROL.                                                    00190071
+           SELECT SUCURSAL   ASSIGN DDSUC                               00200099
+           FILE STATUS IS WS-FS-SUC.                                    00210099
+                                                                        00220029
+           SELECT SUCURSAL1  ASSIGN DDSUC1                              00230099
+           FILE STATUS IS WS-FS-SUC1.                                   00240099
+                                                                        00250093
+           SELECT SALIDA     ASSIGN DDSALE                              00260099
+            FILE STATUS IS WS-FS-SAL.                                   00270071
+                                                                        00280043
+       DATA DIVISION.                                                   00290029
+       FILE SECTION.                                                    00300029
+                                                                        00310096
+       FD SUCURSAL                                                      00320099
+             BLOCK CONTAINS 0 RECORDS                                   00330029
+             RECORDING MODE IS F.                                       00340029
+                                                                        00350029
+       01 REG-SUC         PIC X(93).                                    00360099
+                                                                        00370021
+       FD SUCURSAL1                                                     00380099
+             BLOCK CONTAINS 0 RECORDS                                   00390093
+             RECORDING MODE IS F.                                       00400093
+                                                                        00410093
+       01 REG-SUC         PIC X(93).                                    00420099
+                                                                        00430093
+       FD SALIDA                                                        00440043
+             BLOCK CONTAINS 0 RECORDS                                   00450043
+             RECORDING MODE IS F.                                       00460043
+                                                                        00470043
+       01 REG-SALIDA      PIC X(93).                                    00480099
+                                                                        00490043
+       WORKING-STORAGE SECTION.                                         00500000
+                                                                        00510099
+      *REGISTRO DE SUCURSAL                                             00520099
+       01 WS-REG-SUC.                                                   00530099
+                                                                        00540099
+        COPY CPSUCUR.                                                   00550099
+                                                                        00560099
+      *REGISTRO DE SUCUR1                                               00570099
+       01  WS-REG-SUC1.                                                 00580099
+                                                                        00590099
+           03  WS-SUC1-NRO         PIC 9(03)    VALUE ZEROS.            00600099
+           03  WS-SUC1-TIP-DOC     PIC XX       VALUE SPACES.           00610099
+           03  WS-SUC1-NRO-DOC     PIC 9(11)    VALUE ZEROS.            00620099
+           03  WS-SUC1-NOMAPE      PIC X(30)    VALUE SPACES.           00630099
+           03  WS-SUC1-EST-CIV     PIC X(10)    VALUE SPACES.           00640099
+           03  WS-SUC1-SEXO        PIC X        VALUE SPACES.           00650099
+           03  WS-SUC1-CUENTA.                                          00660099
+             05  WS-SUC1-TIP       PIC 9(02)    VALUE ZEROS.            00670099
+             05  WS-SUC1-CTA       PIC 9(03)    VALUE ZEROS.            00680099
+           03  WS-SUC1-SALDO       PIC S9(7)V99 COMP-3  VALUE ZEROS.    00690099
+           03  FILLER              PIC X(26)    VALUE SPACES.           00700099
+                                                                        00710099
+      *REGISTRO DE SALIDA                                               00720099
+       01 WS-REG-SAL.                                                   00730099
+                                                                        00740099
+           03  WS-SAL-NRO          PIC 9(03)    VALUE ZEROS.            00742099
+           03  WS-SAL-TIP-DOC      PIC XX       VALUE SPACES.           00743099
+           03  WS-SAL-NRO-DOC      PIC 9(11)    VALUE ZEROS.            00744099
+           03  WS-SAL-NOMAPE       PIC X(30)    VALUE SPACES.           00745099
+           03  WS-SAL-EST-CIV      PIC X(10)    VALUE SPACES.           00746099
+           03  WS-SAL-SEXO         PIC X        VALUE SPACES.           00747099
+           03  WS-SAL-CUENTA.                                           00748099
+             05  WS-SAL-TIP        PIC 9(02)    VALUE ZEROS.            00749099
+             05  WS-SAL-CTA        PIC 9(03)    VALUE ZEROS.            00749199
+           03  WS-SAL-SALDO        PIC S9(7)V99 COMP-3  VALUE ZEROS.    00749299
+           03  FILLER              PIC X(26)    VALUE SPACES.           00749399
+                                                                        00749499
+                                                                        00760099
+      *FILE STATUS ENTRADA Y SALIDA                                     00770099
+       77  WS-FS-SUC               PIC XX        VALUE SPACES.          00780099
+       77  WS-FS-SUC1              PIC XX        VALUE SPACES.          00790099
+       77  WS-FS-SAL               PIC XX        VALUE SPACES.          00800094
+      *DISPLAY DE RESULTADOS                                            00801099
+       77  WS-DISP                 PIC Z(4)9     VALUE ZEROS.           00802099
+                                                                        00810099
+      *CLAVES PARA PODER COMPARAR                                       00820099
+       01  WS-CLAVE.                                                    00830099
+           03 WS-CLA-NRO           PIC 999       VALUE ZEROES.          00840099
+           03 WS-CLA-TIP           PIC 99        VALUE ZEROES.          00850099
+           03 WS-CLA-CTA           PIC 999       VALUE ZEROES.          00860099
+                                                                        00870099
+       01  WS-CLAVE1.                                                   00880099
+           03 WS-CLA1-NRO          PIC 999       VALUE ZEROES.          00890099
+           03 WS-CLA1-TIP          PIC 99        VALUE ZEROES.          00900099
+           03 WS-CLA1-CTA          PIC 999       VALUE ZEROES.          00910099
+                                                                        00920099
+      *ACUMULADORES Y CONTADORES                                        00930099
+       77 WS-SALDO-ACUM            PIC S9(09)V99 VALUE ZEROES.          00940099
+       77 WS-TOT-LEIDO             PIC  9(05)    VALUE ZEROES.          00950099
+       77 WS-TOT-LEIDO1            PIC  9(05)    VALUE ZEROES.          00960099
+       77 WS-GRAB-SAL              PIC  9(05)    VALUE ZEROES.          00970099
+       77 WS-REG-ENC               PIC  9(05)    VALUE ZEROES.          00980099
+       77 WS-REG-NO-ENC            PIC  9(05)    VALUE ZEROES.          00990099
+                                                                        01000099
+      *FIN DE LECTURA PROGRAMA                                          01010099
+       01  WS-STATUS-FIN           PIC X.                               01020094
+           88  WS-FIN-LECTURA                    VALUE 'Y'.             01030094
+           88  WS-NO-FIN-LECTURA                 VALUE 'N'.             01040094
+      *FIN DE LECTURA SUCURSAL                                          01050099
+       01  WS-STATUS-FIN-SUC       PIC X.                               01060099
+           88  WS-FIN-SUC                        VALUE 'Y'.             01070099
+           88  WS-NO-FIN-SUC                     VALUE 'N'.             01080099
+      *FIN DE LECTURA SUCUR1                                            01090099
+       01  WS-STATUS-FIN-SUC1      PIC X.                               01100099
+           88  WS-FIN-SUC1                       VALUE 'Y'.             01110099
+           88  WS-NO-FIN-SUC1                    VALUE 'N'.             01120099
+                                                                        01130096
+      ***************************************************************.  01140000
+       PROCEDURE DIVISION.                                              01150000
+      **************************************                            01160000
+      *                                    *                            01170000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            01180000
+      *                                    *                            01190000
+      **************************************                            01200000
+       MAIN-PROGRAM-INICIO.                                             01210001
+                                                                        01220044
+      *CHEQUEO FS E INICIALIZO LO QUE HAGA FALTA                        01230044
+           PERFORM 1000-I-INICIO  THRU                                  01240001
+                   1000-F-INICIO.                                       01250001
+                                                                        01260044
+      *REALIZO LOS PROCESOS CORRESPONDIENTES                            01270046
+           PERFORM 2000-I-PROCESO  THRU                                 01280001
+                   2000-F-PROCESO UNTIL WS-FIN-LECTURA.                 01290056
+                                                                        01300044
+      *CIERRO LOS ARCHIVOS,CHEQUEO FS,GUARDO REGISTROS.                 01310044
+           PERFORM 9999-I-FINAL    THRU                                 01320001
+                   9999-F-FINAL.                                        01330004
+                                                                        01340001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      01350001
+                                                                        01360001
+       1000-I-INICIO.                                                   01370001
+                                                                        01380050
+      *SETEO DE FLAGS PARA PODER COMENZAR                               01381099
+                                                                        01382099
+           SET WS-NO-FIN-SUC     TO TRUE                                01390099
+           SET WS-NO-FIN-SUC1    TO TRUE                                01400099
+           SET WS-NO-FIN-LECTURA TO TRUE                                01410099
+                                                                        01420096
+      *  CHEQUEO ARCHIVOS DE ENTRADA                                    01430093
+                                                                        01440044
+           OPEN INPUT SUCURSAL.                                         01450099
+           EVALUATE WS-FS-SUC                                           01460099
+            WHEN 00                                                     01470029
+      *GUARDO EL PRIMER VALOR DE SUCURSAL CUANDO EL FS ES CORRECTO      01470199
+              PERFORM 3200-LEER-SUCURSAL  THRU                          01471099
+                      3200-LEER-SUCURSAL-F                              01472099
+             CONTINUE                                                   01473099
+            WHEN OTHER                                                  01490035
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-SUC        01500099
+             SET WS-FIN-LECTURA  TO TRUE                                01510099
+           END-EVALUATE.                                                01520030
+                                                                        01530044
+           OPEN INPUT SUCURSAL1                                         01540099
+           EVALUATE WS-FS-SUC1                                          01550099
+            WHEN 00                                                     01560093
+      *GUARDO EL PRIMER VALOR DE SUCUR1 CUANDO EL FS ES CORRECTO        01560199
+              PERFORM 3100-LEER-SUCURSAL1 THRU                          01561099
+                      3100-LEER-SUCURSAL1-F                             01562099
+             CONTINUE                                                   01563099
+            WHEN OTHER                                                  01580093
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-SUC1       01590099
+             SET WS-FIN-LECTURA  TO TRUE                                01600099
+           END-EVALUATE.                                                01610093
+                                                                        01620093
+      * CHEQUEO ARCHIVO DE SALIDA                                       01630044
+                                                                        01640044
+           OPEN OUTPUT SALIDA.                                          01650044
+           EVALUATE WS-FS-SAL                                           01660044
+            WHEN 00                                                     01670044
+             CONTINUE                                                   01680044
+            WHEN OTHER                                                  01690044
+             DISPLAY 'ARCHIVO SALIDA CORRUPTO, ERROR ' WS-FS-SAL        01700044
+             SET WS-FIN-LECTURA  TO TRUE                                01710099
+           END-EVALUATE.                                                01720044
+                                                                        01730044
+       1000-F-INICIO.                                                   01840001
+                                                                        01850021
+           EXIT.                                                        01860000
+                                                                        01870021
+      **************************************                            01880000
+      *                                    *                            01890000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            01900000
+      *                                    *                            01910000
+      **************************************                            01920000
+                                                                        01930057
+       2000-I-PROCESO.                                                  01940089
+                                                                        01955099
+      *COMIENZO A COMPARAR REGISTROS                                    01960099
+           IF WS-CLAVE1 = WS-CLAVE                                      01970099
+                                                                        01971099
+      *SI SON IGUALES, AGREGO SALDO Y LEO SIGUIENTE MOV                 01972099
+              PERFORM 3000-AGREGAR-SALDO  THRU                          01980099
+                      3000-AGREGAR-SALDO-F                              01990099
+              PERFORM 3100-LEER-SUCURSAL1 THRU                          01990199
+                      3100-LEER-SUCURSAL1-F                             01990299
+      *SI LUEGO DE LEER NO SON IGUALES, GUARDO EL SALDO Y GRABO         01990399
+             IF WS-CLAVE1 NOT EQUAL WS-CLAVE                            01990499
+      *       PERFORM 3200-LEER-SUCURSAL  THRU                          01990799
+      *               3200-LEER-SUCURSAL-F                              01990899
+              PERFORM 3300-GRABAR-REG     THRU                          01990999
+                      3300-GRABAR-REG-F                                 01991099
+             END-IF                                                     01993699
+      *SI EL MOVIMIENTO ES MENOR,INCREMENTO CONTADOR Y LEO SIGUIENTE MOV01994099
+           ELSE                                                         02030099
+             IF WS-CLAVE1 < WS-CLAVE                                    02040099
+              ADD 1 TO WS-REG-NO-ENC                                    02040299
+              PERFORM 3100-LEER-SUCURSAL1 THRU                          02040399
+                      3100-LEER-SUCURSAL1-F                             02040499
+             ELSE                                                       02070099
+      *TENGO DUDAS SI CON REGISTRO NO ENCONTRADOS HACEN ALUSION A       02081199
+      *MOVIMIENTOS O CLIENTES, SI SON CLIENTES TAMBIEN, DEBERIA         02081299
+      *MODIFICAR ACA Y AGREGAR ESTE CONTADOR                            02081399
+      *SI EL CLIENTE ES MENOR,GRABO REGISTRO Y LEO SIGUIENTE MOV        02081499
+      *       ADD 1 TO WS-REG-NO-ENC                                    02082099
+              PERFORM 3200-LEER-SUCURSAL  THRU                          02091199
+                      3200-LEER-SUCURSAL-F                              02091299
+             END-IF                                                     02091799
+           END-IF.                                                      02091899
+                                                                        02091999
+      *SI NO HAY MAS REGISTROS DE LOS 2, SE TERMINA EL PROGRAMA         02092099
+           IF WS-FIN-SUC AND WS-FIN-SUC1                                02093099
+             SET WS-FIN-LECTURA TO TRUE                                 02094099
+           END-IF.                                                      02095099
+                                                                        02096099
+       2000-F-PROCESO. EXIT.                                            02110089
+                                                                        02120089
+      ************************************************************      02130089
+                                                                        02130199
+       3000-AGREGAR-SALDO.                                              02131099
+      *INCREMENTA EL CONTADOR Y EL ACUMULADOR                           02132099
+           ADD 1              TO WS-REG-ENC                             02133099
+           ADD WS-SUC1-SALDO  TO WS-SALDO-ACUM.                         02134099
+                                                                        02135099
+       3000-AGREGAR-SALDO-F. EXIT.                                      02136099
+                                                                        02136199
+       3100-LEER-SUCURSAL1.                                             02136299
+      *LECTURA DE ARCHIVO SUCUR1 Y LLENADO DE CLAVES PARA COMPARAR      02136399
+           READ SUCURSAL1 INTO WS-REG-SUC1                              02136899
+            EVALUATE WS-FS-SUC1                                         02136999
+             WHEN '00'                                                  02137099
+      *LLENO LA CLAVE CON LOS DATOS DE SUC1                             02137199
+           ADD 1 TO WS-TOT-LEIDO1                                       02137299
+              MOVE WS-SUC1-NRO    TO WS-CLA1-NRO                        02137399
+              MOVE WS-SUC1-TIP    TO WS-CLA1-TIP                        02137499
+              MOVE WS-SUC1-CTA    TO WS-CLA1-CTA                        02137599
+             WHEN '10'                                                  02137699
+      *       DISPLAY ' NO HAY MAS MOVIMIENTOS EN REGISTRO '            02137799
+      *AL FINAL DEL ARCHIVO, MUEVO EL MOVIMIENTO A HIGH-VALUES          02137899
+              MOVE HIGH-VALUES TO WS-CLAVE1                             02137999
+              SET WS-FIN-SUC1    TO TRUE                                02138099
+             WHEN OTHER                                                 02138199
+              DISPLAY 'ARCHIVO SUCURSAL CON ERROR EN FS :' WS-FS-SUC1   02138299
+              SET WS-FIN-LECTURA TO TRUE                                02138399
+             END-EVALUATE.                                              02138499
+                                                                        02138899
+       3100-LEER-SUCURSAL1-F.   EXIT.                                   02138999
+                                                                        02139099
+       3200-LEER-SUCURSAL.                                              02139199
+                                                                        02139299
+      *LECTURA DE ARCHIVO SUCURSAL Y LLENADO DE CLAVES PARA COMPARAR    02139399
+           READ SUCURSAL INTO WS-REG-SUC                                02139599
+            EVALUATE WS-FS-SUC                                          02139699
+             WHEN '00'                                                  02139799
+      *LLENO LA CLAVE CON LOS DATOS DE SUC                              02139899
+           ADD 1 TO WS-TOT-LEIDO                                        02139999
+               MOVE WS-SUC-NRO  TO WS-CLA-NRO                           02140099
+               MOVE WS-SUC-TIP  TO WS-CLA-TIP                           02140199
+               MOVE WS-SUC-CTA  TO WS-CLA-CTA                           02140299
+             WHEN '10'                                                  02140399
+      *       DISPLAY ' NO HAY MAS CLIENTES EN REGISTRO '               02140499
+      *AL FINAL DEL ARCHIVO, MUEVO EL CLIENTE A HIGH-VALUES             02140599
+              MOVE HIGH-VALUES TO WS-CLAVE                              02140699
+              SET WS-FIN-SUC     TO TRUE                                02140799
+             WHEN OTHER                                                 02140899
+              DISPLAY 'ARCHIVO SUCURSAL CON ERROR EN FS :' WS-FS-SUC    02140999
+              SET WS-FIN-LECTURA TO TRUE                                02141099
+            END-EVALUATE.                                               02141199
+                                                                        02141299
+       3200-LEER-SUCURSAL-F.  EXIT.                                     02141399
+                                                                        02141499
+       3300-GRABAR-REG.                                                 02141599
+      *AGREGO EL CONTADOR AL SALDO DEL CLIENTE,VACIO ACUMULADOR Y GRABO 02141699
+           ADD  WS-SALDO-ACUM TO WS-SUC-SALDO                           02141799
+           MOVE ZEROS         TO WS-SALDO-ACUM                          02141899
+           MOVE  WS-REG-SUC   TO WS-REG-SAL                             02141999
+           WRITE REG-SALIDA FROM WS-REG-SAL.                            02142099
+           EVALUATE WS-FS-SAL                                           02142199
+            WHEN 00                                                     02142299
+              ADD  1             TO WS-GRAB-SAL                         02142399
+            WHEN OTHER                                                  02142499
+              DISPLAY 'ARCHIVO SALIDA CORRUPTO,ERROR ' WS-FS-SAL        02142599
+              SET WS-FIN-LECTURA TO TRUE                                02142699
+           END-EVALUATE.                                                02142799
+                                                                        02142899
+       3300-GRABAR-REG-F. EXIT.                                         02142999
+                                                                        02143099
+                                                                        02600099
+      ********************************************************          02610089
+                                                                        02620089
+       9999-I-FINAL.                                                    02630089
+      *MUESTRO TOTALES PEDIDOS                                          02630199
+                                                                        02630299
+           DISPLAY '        _.-: TOTALES :-._'                          02630399
+           MOVE WS-TOT-LEIDO TO WS-DISP                                 02630499
+           DISPLAY 'TOTAL REGISTROS LEIDO ARCHIVO 1 :' WS-DISP          02631099
+           MOVE WS-TOT-LEIDO1 TO WS-DISP                                02631199
+           DISPLAY 'TOTAL REGISTROS LEIDO ARCHIVO 2 :' WS-DISP          02631299
+           MOVE WS-GRAB-SAL TO WS-DISP                                  02631399
+           DISPLAY 'TOTAL REGISTROS GRABADOS        :' WS-DISP          02631499
+           MOVE WS-REG-ENC TO WS-DISP                                   02631599
+           DISPLAY 'TOTAL REGISTROS ENCONTRADOS     :' WS-DISP          02631699
+           MOVE WS-REG-NO-ENC TO WS-DISP                                02631799
+           DISPLAY 'TOTAL REGISTROS NO ENCONTRADOS  :' WS-DISP          02631899
+                                                                        02632099
+      *CIERRO LOS ARCHIVOS DE ENTRADA Y SALIDA                          02640091
+           EVALUATE WS-FIN-LECTURA                                      02650089
+            WHEN TRUE                                                   02660089
+             CONTINUE                                                   02670089
+            WHEN OTHER                                                  02680089
+                                                                        02690094
+      *CERRAR ARCHIVOS ENTRADA                                          02700098
+             CLOSE SUCURSAL                                             02710099
+             EVALUATE WS-FS-SUC                                         02720099
+              WHEN 00                                                   02730089
+                 CONTINUE                                               02740089
+              WHEN OTHER                                                02750089
+               DISPLAY 'ARCHIVO CLIENTE CORRUPTO,ERROR ' WS-FS-SUC      02760099
+               SET WS-FIN-LECTURA TO TRUE                               02770089
+             END-EVALUATE                                               02780094
+                                                                        02790094
+             CLOSE SUCURSAL1                                            02800099
+             EVALUATE WS-FS-SUC1                                        02810099
+              WHEN 00                                                   02820094
+                 CONTINUE                                               02830094
+              WHEN OTHER                                                02840094
+               DISPLAY 'ARCHIVO MOVIM CORRUPTO,ERROR ' WS-FS-SUC1       02850099
+               SET WS-FIN-LECTURA TO TRUE                               02860094
+             END-EVALUATE                                               02870094
+                                                                        02880089
+      *CERRAR ARCHIVO SALIDA                                            02890089
+             CLOSE SALIDA                                               02900089
+             EVALUATE WS-FS-SAL                                         02910089
+              WHEN 00                                                   02920089
+                 CONTINUE                                               02930089
+              WHEN OTHER                                                02940089
+               DISPLAY 'ARCHIVO SALIDA CORRUPTO,ERROR ' WS-FS-SAL       02950089
+               SET WS-FIN-LECTURA TO TRUE                               02960089
+             END-EVALUATE                                               02970089
+           END-EVALUATE.                                                02980089
+                                                                        02990089
+       9999-F-FINAL. EXIT.                                              03000089

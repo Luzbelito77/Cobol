@@ -1,0 +1,331 @@
+       IDENTIFICATION DIVISION.                                         00010029
+        PROGRAM-ID PGMNOX51.                                            00020099
+      **************************************                            00040029
+      *        EXAMEN DE APAREO            *                            00050099
+      **************************************                            00060029
+      *  FECHA   *    DETALLE              *                            00070099
+      **************************************                            00080029
+      *          *                         *                            00090099
+      * 21-10-22 * COMIENZO EXAMEN APAREO  *                            00100099
+      *          *                         *                            00112099
+      **************************************                            00120029
+       ENVIRONMENT DIVISION.                                            00130029
+       CONFIGURATION SECTION.                                           00140029
+       SPECIAL-NAMES.                                                   00150069
+           DECIMAL-POINT IS COMMA.                                      00160070
+                                                                        00170070
+       INPUT-OUTPUT SECTION.                                            00180029
+       FILE-CONTROL.                                                    00190071
+                                                                        00191099
+           SELECT EMPLEADO   ASSIGN DDENTRA                             00200099
+           FILE STATUS IS WS-FS-EMP.                                    00210099
+                                                                        00220029
+           SELECT VSAM       ASSIGN DDVSAM                              00221099
+                  ORGANIZATION IS INDEXED                               00222099
+                  ACCESS MODE IS SEQUENTIAL                             00223099
+                  RECORD KEY IS  VSAM-KEY-E                             00224099
+                  FILE STATUS IS WS-FS-VS.                              00225099
+                                                                        00226099
+           SELECT SALIDA     ASSIGN DDSALE                              00260099
+                  ORGANIZATION IS INDEXED                               00271099
+                  ACCESS MODE IS SEQUENTIAL                             00272099
+                  RECORD KEY IS  VSAM-KEY-S                             00273099
+                  FILE STATUS IS WS-FS-SAL.                             00274099
+                                                                        00280043
+       DATA DIVISION.                                                   00290029
+       FILE SECTION.                                                    00300029
+                                                                        00310096
+       FD EMPLEADO                                                      00320099
+             BLOCK CONTAINS 0 RECORDS                                   00330029
+             RECORDING MODE IS F.                                       00340029
+                                                                        00350029
+       01 REG-EMP                  PIC X(160).                          00360099
+                                                                        00370021
+       FD VSAM.                                                         00380099
+       01  REG-VSAM.                                                    00380199
+           03  VSAM-KEY-E          PIC X(13).                           00380299
+           03  FILLER              PIC X(147).                          00380699
+                                                                        00430093
+       FD SALIDA.                                                       00440099
+       01  REG-SALIDA.                                                  00440199
+           03  VSAM-KEY-S          PIC X(13).                           00440299
+           03  FILLER              PIC X(147).                          00440699
+                                                                        00490043
+       WORKING-STORAGE SECTION.                                         00500000
+                                                                        00500199
+      *FILE STATUS ENTRADA Y SALIDA                                     00500299
+       77  WS-FS-EMP               PIC XX         VALUE SPACES.         00500399
+       77  WS-FS-VS                PIC XX         VALUE SPACES.         00500499
+       77  WS-FS-SAL               PIC XX         VALUE SPACES.         00500599
+                                                                        00501099
+      *CONTADORES                                                       00540199
+       77 WS-ACUM                  PIC  9(04)     VALUE ZEROES.         00540299
+       77 WS-GEN-EMP               PIC  9(04)     VALUE ZEROES.         00540399
+       77 WS-GEN-PER               PIC  9(04)     VALUE ZEROES.         00540499
+       77 WS-EMP-ENC               PIC  9(04)     VALUE ZEROES.         00540599
+       77 WS-EMP-NO-ENC            PIC  9(04)     VALUE ZEROES.         00540699
+                                                                        00540799
+      *MASCARAS DE EDICION                                              00540899
+       77 WS-DISP                  PIC   ZZZ9     VALUE ZEROES.         00540999
+                                                                        00541199
+      *CLAVE PARA APAREAR                                               00541299
+                                                                        00541399
+       01 WS-CLAVE.                                                     00541499
+         03 WS-DOC                 PIC XX         VALUE SPACES.         00541599
+         03 WS-NRO                 PIC 9(11)      VALUE ZEROES.         00541699
+                                                                        00541799
+       01 WS-CLAVE1.                                                    00541899
+         03 WS-DOC1                PIC XX         VALUE SPACES.         00541999
+         03 WS-NRO1                PIC 9(11)      VALUE ZEROES.         00542099
+                                                                        00542199
+      *ESTRUCTURA ARCHIVO VSAM                                          00543099
+       COPY CPPERSON.                                                   00550099
+                                                                        00560099
+      *ESTRUCTURA ARCHIVO EMPLEADOS                                     00560199
+       COPY CPEMPLE.                                                    00562999
+                                                                        00563099
+      *ESTRUCTURA ARCHIVO SALIDA                                        00565199
+                                                                        00565299
+       01  WS-REG-SALIDA.                                               00565399
+           03  WS-EMP-TIP-DOC      PIC X(02)    VALUE SPACES.           00565599
+           03  WS-EMP-NRO-DOC      PIC 9(11)    VALUE ZEROES.           00565699
+           03  WS-EMP-CLI-NRO      PIC 9(03)    VALUE ZEROES.           00565799
+           03  WS-EMP-NOMAPE       PIC X(30)    VALUE SPACES.           00565899
+           03  WS-EMP-CLI-AAAAMMDD PIC 9(08)    VALUE ZEROES.           00566199
+           03  WS-EMP-DIRECCION    PIC X(30)    VALUE SPACES.           00566399
+           03  WS-EMP-LOCALIDAD    PIC X(15)    VALUE SPACES.           00566499
+           03  WS-EMP-EMAIL        PIC X(30)    VALUE SPACES.           00566599
+           03  WS-EMP-TELEFONO     PIC X(15)    VALUE SPACES.           00566699
+           03  WS-EMP-SEXO         PIC X        VALUE SPACES.           00566799
+           03  WS-EMP-NRO-SUCURSAL PIC 9(03)    VALUE ZEROES.           00566899
+           03  WS-EMP-BAJ-AAAAMMDD PIC X(08)    VALUE SPACES.           00567199
+           03  WS-EMP-SECUENCIA    PIC 9(04)    VALUE ZEROES.           00567399
+                                                                        00569099
+      *FIN DE LECTURA PROGRAMA                                          01010099
+       01  WS-STATUS-FIN           PIC X.                               01020094
+           88  WS-FIN-LECTURA                   VALUE 'Y'.              01030099
+           88  WS-NO-FIN-LECTURA                VALUE 'N'.              01040099
+                                                                        01041099
+      *FIN DE LECTURA EMPLEADO                                          01050099
+       01  WS-STATUS-FIN-EMP       PIC X.                               01060099
+           88  WS-FIN-EMP                       VALUE 'Y'.              01070099
+           88  WS-NO-FIN-EMP                    VALUE 'N'.              01080099
+                                                                        01130096
+      *FIN DE LECTURA VSAM                                              01131099
+       01  WS-STATUS-FIN-VS        PIC X.                               01132099
+           88  WS-FIN-VS                        VALUE 'Y'.              01133099
+           88  WS-NO-FIN-VS                     VALUE 'N'.              01134099
+                                                                        01135099
+      ***************************************************************.  01140000
+                                                                        01145099
+       PROCEDURE DIVISION.                                              01150099
+      **************************************                            01160000
+      *                                    *                            01170000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            01180000
+      *                                    *                            01190000
+      **************************************                            01200000
+       MAIN-PROGRAM-INICIO.                                             01210001
+                                                                        01220044
+      *CHEQUEO FS E INICIALIZO LO QUE HAGA FALTA                        01230044
+           PERFORM 1000-I-INICIO  THRU                                  01240001
+                   1000-F-INICIO.                                       01250001
+                                                                        01260044
+      *REALIZO LOS PROCESOS CORRESPONDIENTES                            01270046
+           PERFORM 2000-I-PROCESO  THRU                                 01280001
+                   2000-F-PROCESO UNTIL WS-FIN-LECTURA.                 01290056
+                                                                        01300044
+      *CIERRO LOS ARCHIVOS,CHEQUEO FS,GUARDO REGISTROS.                 01310044
+           PERFORM 9999-I-FINAL    THRU                                 01320001
+                   9999-F-FINAL.                                        01330004
+                                                                        01340001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      01350001
+                                                                        01360001
+       1000-I-INICIO.                                                   01370001
+                                                                        01380050
+      *SETEO DE FLAGS PARA PODER COMENZAR                               01381099
+                                                                        01382099
+           SET WS-NO-FIN-EMP     TO TRUE                                01390099
+           SET WS-NO-FIN-VS      TO TRUE                                01400099
+           SET WS-NO-FIN-LECTURA TO TRUE                                01410099
+           INITIALIZE WS-GEN-EMP                                        01411099
+                      WS-GEN-PER                                        01412099
+                      WS-EMP-ENC                                        01413099
+                      WS-EMP-NO-ENC                                     01414099
+                                                                        01420096
+      *CHEQUEO ARCHIVOS DE ENTRADA                                      01430099
+                                                                        01440044
+           OPEN INPUT EMPLEADO.                                         01450099
+           EVALUATE WS-FS-EMP                                           01460099
+            WHEN 00                                                     01470099
+      *GUARDO EL PRIMER VALOR DE NOVEDADES CUANDO EL FS ES CORRECTO     01480099
+              PERFORM 3000-LEER-EMPLEADO   THRU                         01490099
+                      3000-LEER-EMPLEADO-F                              01500099
+             CONTINUE                                                   01510099
+            WHEN OTHER                                                  01520099
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-EMP        01530099
+             SET WS-FIN-LECTURA  TO TRUE                                01531099
+           END-EVALUATE.                                                01532099
+                                                                        01533099
+           OPEN INPUT VSAM                                              01540099
+           EVALUATE WS-FS-VS                                            01550099
+            WHEN 00                                                     01560093
+      *GUARDO EL PRIMER VALOR DE VSAM CUANDO EL FS ES CORRECTO          01560199
+              PERFORM 3200-LEER-VSAM      THRU                          01561099
+                      3200-LEER-VSAM-F                                  01562099
+             CONTINUE                                                   01563099
+            WHEN OTHER                                                  01580093
+             DISPLAY 'ARCHIVO VSAM CORRUPTO,ERROR ' WS-FS-VS            01590099
+             SET WS-FIN-LECTURA  TO TRUE                                01600099
+           END-EVALUATE.                                                01610093
+                                                                        01611099
+      *CHEQUEO ARCHIVO DE SALIDA                                        01630099
+                                                                        01640044
+           OPEN OUTPUT SALIDA.                                          01650099
+           EVALUATE WS-FS-SAL                                           01660044
+            WHEN 00                                                     01670044
+             CONTINUE                                                   01680044
+            WHEN OTHER                                                  01690044
+             DISPLAY 'ARCHIVO SALIDA CORRUPTO, ERROR ' WS-FS-SAL        01700044
+             SET WS-FIN-LECTURA  TO TRUE                                01710099
+           END-EVALUATE.                                                01720044
+                                                                        01721099
+       1000-F-INICIO.                                                   01840001
+                                                                        01850021
+           EXIT.                                                        01860000
+                                                                        01870021
+      **************************************                            01880000
+      *                                    *                            01890000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            01900000
+      *                                    *                            01910000
+      **************************************                            01920000
+                                                                        01930057
+       2000-I-PROCESO.                                                  01940089
+                                                                        01955099
+      *COMIENZO APAREO                                                  01955199
+            IF WS-CLAVE = WS-CLAVE1                                     01956099
+      *SI EL TIPO Y NUMERO DE DOCUMENTO SON IGUALES,AGREGO AL           01956199
+               PERFORM 3100-GRABAR-REG THRU                             01956299
+                       3100-GRABAR-REG-F                                01956399
+               PERFORM 3000-LEER-EMPLEADO THRU                          01956499
+                       3000-LEER-EMPLEADO-F                             01956599
+            ELSE                                                        02097099
+               IF WS-CLAVE > WS-CLAVE1                                  02097199
+      *SI EL KEY ES MENOR, LEO SIGUIENTE EMPLEADO                       02097499
+               ADD 1 TO WS-EMP-NO-ENC                                   02097599
+                   PERFORM 3000-LEER-EMPLEADO THRU                      02097699
+                           3000-LEER-EMPLEADO-F                         02097799
+               ELSE                                                     02097899
+      *SI EL KEY ES MAYOR, LEO SIGUIENTE DEL ARCHIVO VSAM               02097999
+                   PERFORM 3200-LEER-VSAM THRU                          02098299
+                           3200-LEER-VSAM-F                             02098399
+               END-IF                                                   02098699
+            END-IF                                                      02098799
+                                                                        02098899
+      *SI AMBOS ARCHIVOS LLEGAN AL FINAL, TERMINA LA EJECUCION          02098999
+           IF WS-FIN-EMP AND WS-FIN-VS                                  02099099
+             SET WS-FIN-LECTURA TO TRUE                                 02099199
+           END-IF.                                                      02099299
+                                                                        02100099
+       2000-F-PROCESO. EXIT.                                            02110089
+                                                                        02120089
+      ************************************************************      02130089
+                                                                        02130199
+       3000-LEER-EMPLEADO.                                              02130299
+      *LEO EL ARCHIVO EMPLEADO Y GUARDO DATOS PARA COMPARAR             02130399
+            READ EMPLEADO INTO REG-EMPLEADO                             02130499
+            EVALUATE WS-FS-EMP                                          02130599
+             WHEN '00'                                                  02130699
+               ADD 1             TO WS-GEN-EMP                          02130799
+               MOVE EMP-TIP-DOC  TO WS-DOC1                             02130899
+               MOVE EMP-NRO-DOC  TO WS-NRO1                             02130999
+             WHEN '10'                                                  02131099
+      *AL LLEGAR AL FINAL DEL ARCHIVO,PONGO HV AL VALOR A COMPARAR      02131199
+               MOVE HIGH-VALUES TO WS-CLAVE1                            02131299
+               SET WS-FIN-EMP TO TRUE                                   02131399
+             WHEN OTHER                                                 02131499
+               DISPLAY 'ERROR EN LECTURA ARCHIVO NOVED FS= ' WS-FS-EMP  02131599
+               SET WS-FIN-LECTURA TO TRUE                               02131699
+            END-EVALUATE.                                               02131799
+                                                                        02131899
+       3000-LEER-EMPLEADO-F. EXIT.                                      02131999
+                                                                        02132099
+       3100-GRABAR-REG.                                                 02132199
+      *GRABO REGISTROS                                                  02132299
+            ADD 1                     TO WS-ACUM                        02132399
+            MOVE REG-EMPLEADO         TO WS-REG-SALIDA                  02132499
+            MOVE WS-ACUM              TO WS-EMP-SECUENCIA               02132599
+            WRITE REG-SALIDA FROM WS-REG-SALIDA                         02132799
+                 EVALUATE WS-FS-SAL                                     02132899
+                  WHEN 00                                               02132999
+                   ADD 1              TO WS-EMP-ENC                     02133099
+                  WHEN OTHER                                            02133199
+                   DISPLAY 'ARCHIVO SALIDA CORRUPTO,ERROR ' WS-FS-SAL   02133299
+                   SET WS-FIN-LECTURA TO TRUE                           02133399
+                 END-EVALUATE.                                          02133499
+                                                                        02133799
+       3100-GRABAR-REG-F. EXIT.                                         02133899
+                                                                        02134099
+       3200-LEER-VSAM.                                                  02143099
+                                                                        02143199
+      *LEO EL ARCHIVO VSAM Y GUARDO DATOS PARA COMPARAR                 02143299
+            READ VSAM INTO REG-PERSONA                                  02143399
+            EVALUATE WS-FS-VS                                           02143499
+            WHEN '00'                                                   02143599
+             ADD 1              TO WS-GEN-PER                           02143699
+             MOVE PER-TIP-DOC   TO WS-DOC                               02143799
+             MOVE PER-NRO-DOC   TO WS-NRO                               02143899
+            CONTINUE                                                    02143999
+            WHEN '10'                                                   02144099
+      *AL LLEGAR AL FINAL DEL ARCHIVO,PONGO HV AL VALOR A COMPARAR      02144199
+             MOVE HIGH-VALUES TO WS-CLAVE                               02144299
+             SET WS-FIN-VS TO TRUE                                      02144399
+            WHEN OTHER                                                  02144599
+             DISPLAY 'ERROR EN LECTURA ARCHIVO VSAM FS= ' WS-FS-VS      02144699
+             SET WS-FIN-LECTURA TO TRUE                                 02144799
+            END-EVALUATE.                                               02144899
+                                                                        02144999
+       3200-LEER-VSAM-F. EXIT.                                          02145099
+                                                                        02600099
+                                                                        02604099
+      ********************************************************          02610089
+                                                                        02620089
+       9999-I-FINAL.                                                    02630089
+      *CIERRO LOS ARCHIVOS DE ENTRADA Y SALIDA                          02640091
+             MOVE WS-GEN-EMP TO WS-DISP                                 02650099
+             DISPLAY  'TOTAL DE EMPLEADOS LEIDOS         = ' WS-DISP    02691099
+             MOVE WS-GEN-PER TO WS-DISP                                 02691199
+             DISPLAY  'TOTAL DE PERSONAS LEIDAS          = ' WS-DISP    02692099
+             MOVE WS-EMP-ENC TO WS-DISP                                 02692199
+             DISPLAY  'TOTAL DE EMPLEADOS ENCONTRADOS    = ' WS-DISP    02693099
+             MOVE WS-EMP-NO-ENC TO WS-DISP                              02694099
+             DISPLAY  'TOTAL DE EMPLEADOS NO ENCONTRADOS = ' WS-DISP    02695099
+      *CERRAR ARCHIVOS ENTRADA                                          02700098
+             CLOSE EMPLEADO                                             02710099
+             EVALUATE WS-FS-EMP                                         02720099
+              WHEN 00                                                   02730089
+                 CONTINUE                                               02740089
+              WHEN OTHER                                                02750089
+               DISPLAY 'ARCHIVO CLIENTE CORRUPTO,ERROR ' WS-FS-EMP      02760099
+               SET WS-FIN-LECTURA TO TRUE                               02770089
+             END-EVALUATE                                               02780094
+                                                                        02790094
+             CLOSE VSAM                                                 02800099
+             EVALUATE WS-FS-VS                                          02810099
+              WHEN 00                                                   02820094
+                 CONTINUE                                               02830094
+              WHEN OTHER                                                02840094
+               DISPLAY 'ARCHIVO MOVIM CORRUPTO,ERROR ' WS-FS-VS         02850099
+               SET WS-FIN-LECTURA TO TRUE                               02860094
+             END-EVALUATE                                               02870094
+                                                                        02880089
+      *CERRAR ARCHIVO SALIDA                                            02890089
+             CLOSE SALIDA                                               02900089
+             EVALUATE WS-FS-SAL                                         02910089
+              WHEN 00                                                   02920089
+                 CONTINUE                                               02930089
+              WHEN OTHER                                                02940089
+               DISPLAY 'ARCHIVO SALIDA CORRUPTO,ERROR ' WS-FS-SAL       02950089
+               SET WS-FIN-LECTURA TO TRUE                               02960089
+             END-EVALUATE.                                              02970099
+                                                                        02974099
+       9999-F-FINAL. EXIT.                                              03000089

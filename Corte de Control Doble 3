@@ -1,0 +1,323 @@
+       IDENTIFICATION DIVISION.                                         00010000
+        PROGRAM-ID PGMCORT3.                                            00011000
+      **********************************************************        00011200
+      *                                                        *        00011300
+      *  CORTE DE CONTROL POR TIPO DOCUMENTO Y SEXO            *        00011400
+      *        (SIN VALIDAR TIPO DOCUMENTO NI  SEXO)           *        00011500
+      *      ARCHIVO INPUT CLASIFICADO POR DOCUM Y SEXO        *        00011600
+      *                                                        *        00011710
+      *      MUESTRA TOTALES POR TIPO DE DOCUMENTO Y SEXO      *        00011810
+      *                                                        *        00011910
+      **********************************************************        00012010
+      *      MANTENIMIENTO DE PROGRAMA                         *        00012110
+      **********************************************************        00012210
+      *  FECHA   *    DETALLE        * COD *                            00012310
+      **************************************                            00012410
+      *          *                   *     *                            00012510
+      *          *                   *     *                            00012610
+      *          *                   *     *                            00012710
+      *          *                   *     *                            00012810
+      *          *                   *     *                            00012910
+      **************************************                            00013010
+                                                                        00013110
+       ENVIRONMENT DIVISION.                                            00013210
+       CONFIGURATION SECTION.                                           00013310
+                                                                        00014000
+       SPECIAL-NAMES.                                                   00014100
+           DECIMAL-POINT IS COMMA.                                      00014200
+                                                                        00014300
+       INPUT-OUTPUT SECTION.                                            00014400
+       FILE-CONTROL.                                                    00014500
+             SELECT CLICOB ASSIGN DDCLICOB                              00014600
+                    FILE STATUS IS WS-FS-CLICOB.                        00014700
+                                                                        00014800
+       DATA DIVISION.                                                   00014900
+       FILE SECTION.                                                    00015000
+       FD CLICOB                                                        00016000
+            BLOCK CONTAINS 0 RECORDS                                    00017000
+            RECORDING MODE IS F.                                        00018000
+                                                                        00019000
+       01 REG-CLICOB     PIC X(93).                                     00020000
+                                                                        00030000
+      **************************                                        00040000
+       WORKING-STORAGE SECTION.                                         00050000
+      **************************                                        00060000
+                                                                        00070000
+       01 FILLER               PIC X(15)   VALUE 'INICIO WORKING '.     00080000
+                                                                        00080100
+      ********************CONTROL FILE STATUS***************************00080200
+       77  WS-FS-CLICOB        PIC XX      VALUE SPACES.                00080300
+           88 WS-FS-NORMAL                 VALUE '00'.                  00080400
+           88 WS-FS-FIN                    VALUE '10'.                  00080500
+                                                                        00080700
+      ******************CONTADOR DE REGISTROS***************************00081000
+       77  WS-CONTADOR         PIC 9(3) COMP-3   VALUE ZEROS.           00082000
+       77  WS-CONTA-EDIT       PIC ZZ9           VALUE ZEROS.           00083000
+                                                                        00084000
+      ******************FLAG FIN DE LECTURA*****************************00085000
+       77  WS-FLAG-FIN         PIC X       VALUE SPACES.                00086000
+           88 WS-SI-PROCESO                VALUE ' '.                   00087000
+           88 WS-FIN-PROCESO               VALUE 'F'.                   00088000
+                                                                        00089000
+      ******************TIPOS DOCUMENTO    *****************************00090000
+       77  WS-DU               PIC XX      VALUE 'DU'.                  00100000
+       77  WS-PA               PIC XX      VALUE 'PA'.                  00110000
+       77  WS-PE               PIC XX      VALUE 'PE'.                  00111000
+      ******************SEXO               *****************************00112000
+       77  WS-F                PIC X       VALUE 'F'.                   00113000
+       77  WS-M                PIC X       VALUE 'M'.                   00114000
+       77  WS-O                PIC X       VALUE 'O'.                   00115000
+      ******************************************************************00116000
+       77  WS-LITERAL-DU       PIC X(30)   VALUE                        00116100
+                            '- DOCUMENTO UNICO '.                       00116200
+       77  WS-LITERAL-PA       PIC X(30)   VALUE                        00116300
+                            '- PASAPORTE ARGENTINO'.                    00116400
+       77  WS-LITERAL-PE       PIC X(30)   VALUE                        00116500
+                            '- PASAPORTE EXTRANJERO'.                   00116600
+       77  WS-LITERAL-NE       PIC X(30)   VALUE                        00116702
+                            '- DOCUM NO ENCONTRADO '.                   00116802
+                                                                        00116900
+       77  WS-LITERAL-F        PIC X(15)   VALUE                        00117000
+                            '- FEMENINO     '.                          00117100
+       77  WS-LITERAL-M        PIC X(15)   VALUE                        00117200
+                            '- MASCULINO    '.                          00117300
+       77  WS-LITERAL-O        PIC X(15)   VALUE                        00117400
+                            '- OTROS        '.                          00117500
+                                                                        00117600
+      ************CONTADOR TOTAL Y SUBTOTAL ****************************00117700
+       77  WS-SUB-TOT-SEXO     PIC 9(03)    VALUE ZEROS.                00117800
+       77  WS-SUB-TOT-TIPD     PIC 9(03)    VALUE ZEROS.                00117900
+      ******************************************************************00118000
+                                                                        00118100
+                                                                        00118200
+      ***************MASCARA DE EDICION*********************************00118300
+       77  WS-DISP             PIC ZZ9      VALUE ZEROS.                00118400
+      ******************************************************************00118500
+                                                                        00118600
+      ******************DOC Y SEXO ANTERIOR*****************************00118700
+       77  WS-DOC-ANT        PIC XX        VALUE ZEROS.                 00118800
+       77  WS-SEXO-ANT       PIC X         VALUE SPACES.                00118900
+      ******************************************************************00119000
+                                                                        00119100
+      ***************COPY ESTRUCTURA DE ENTRADA*************************00119200
+       COPY CLICOB.                                                     00119300
+      ******************************************************************00119400
+                                                                        00119500
+       PROCEDURE DIVISION.                                              00119600
+                                                                        00119700
+      *************TRONCO PRINCIPAL DEL PROGRAMA************************00119800
+       MAIN-PROGRAM-INICIO.                                             00119900
+                                                                        00120000
+           PERFORM 1000-I-INICIO THRU                                   00120100
+                   1000-F-INICIO.                                       00120200
+                                                                        00120300
+           PERFORM 2000-I-PROCESO THRU                                  00120400
+                   2000-F-PROCESO UNTIL WS-FIN-PROCESO.                 00120500
+                                                                        00120600
+           PERFORM 9999-I-FIN THRU                                      00120700
+                   9999-F-FIN.                                          00120800
+                                                                        00120900
+       MAIN-PROGRAM-FINAL. GOBACK.                                      00121000
+                                                                        00121100
+                                                                        00121200
+      ****************************INICIO********************************00122000
+       1000-I-INICIO.                                                   00123000
+                                                                        00124000
+      ********************APERTURA Y CONTROL ARCHIVO********************00125000
+           SET WS-SI-PROCESO   TO TRUE.                                 00126000
+                                                                        00127000
+           OPEN INPUT CLICOB.                                           00128000
+                                                                        00129000
+           EVALUATE TRUE                                                00130000
+             WHEN WS-FS-NORMAL                                          00140000
+                  CONTINUE                                              00150000
+                                                                        00160000
+             WHEN WS-FS-FIN                                             00170000
+                DISPLAY '* ERROR ARCHIVO DE OPEN VACIO = ' WS-FS-CLICOB 00180000
+                SET WS-FIN-PROCESO TO TRUE                              00181000
+                                                                        00182000
+             WHEN OTHER                                                 00183000
+                DISPLAY '* ERROR EN APERTURA DE ARCHIVO = ' WS-FS-CLICOB00184000
+                SET WS-FIN-PROCESO TO TRUE                              00185000
+                                                                        00186000
+           END-EVALUATE.                                                00187000
+                                                                        00188000
+      ********************PRIMER LECTURA CORTE DE CONTROL***************00189000
+                                                                        00200000
+           READ CLICOB INTO WS-REG-CLICOB                               00210000
+                                                                        00220000
+             EVALUATE TRUE                                              00230000
+               WHEN WS-FS-NORMAL                                        00240000
+                    ADD 1     TO WS-CONTADOR                            00250000
+                                                                        00283300
+               WHEN WS-FS-FIN                                           00283400
+                  DISPLAY 'ARCHIVO ENTRADA VAC�O'                       00283500
+                  SET WS-FIN-PROCESO TO TRUE                            00283600
+                                                                        00283700
+               WHEN OTHER                                               00283800
+                  DISPLAY 'ERROR LECTURA:       ' WS-FS-CLICOB          00283900
+                  SET WS-FIN-PROCESO TO TRUE                            00284000
+                                                                        00285000
+           END-EVALUATE.                                                00286000
+                                                                        00287000
+              ADD 1     TO     WS-SUB-TOT-SEXO                          00290000
+              MOVE WS-SUC-TIP-DOC TO WS-DOC-ANT                         00300000
+              MOVE WS-SUC-SEXO   TO WS-SEXO-ANT.                        00310000
+                                                                        00310101
+      ********************VER PRIMER TITULO  CORTE CONTROL**************00310201
+              PERFORM 2133-I-VER-DISPLAY      THRU                      00311001
+                      2133-F-VER-DISPLAY.                               00312001
+                                                                        00320000
+      ********************FIN PRIMER LECTURA CORTE CONTROL**************00330000
+       1000-F-INICIO.                                                   00350000
+           EXIT.                                                        00360000
+                                                                        00370000
+      *************************FIN INICIO*******************************00380000
+                                                                        00390000
+      *************INICIO PROCESOS DEL PROGRAMA*************************00400000
+       2000-I-PROCESO.                                                  00410000
+                                                                        00420000
+           READ CLICOB INTO WS-REG-CLICOB                               00430000
+                                                                        00440000
+           EVALUATE TRUE                                                00441000
+             WHEN WS-FS-NORMAL                                          00442000
+                ADD 1     TO     WS-CONTADOR                            00443000
+                                                                        00444000
+                PERFORM 2100-I-SEGUIR-PROCESO THRU                      00444300
+                        2100-F-SEGUIR-PROCESO                           00444400
+                                                                        00444600
+             WHEN WS-FS-FIN                                             00444800
+                  SET WS-FIN-PROCESO TO TRUE                            00444900
+                                                                        00445000
+                  PERFORM 2120-I-CORTE-CONTROL-TIPD THRU                00445100
+                          2120-F-CORTE-CONTROL-TIPD                     00446000
+                                                                        00447000
+             WHEN OTHER                                                 00449100
+                  DISPLAY '* ERROR EN LECTURA DE ARHIVO = ' WS-FS-CLICOB00449200
+                  SET WS-FIN-PROCESO TO TRUE                            00449300
+                                                                        00449400
+           END-EVALUATE.                                                00449500
+                                                                        00449600
+       2000-F-PROCESO.                                                  00449700
+           EXIT.                                                        00449800
+      ****************FIN DE PROCESOS DE PROGRAMA***********************00449900
+                                                                        00450000
+       2100-I-SEGUIR-PROCESO.                                           00460000
+                                                                        00470000
+           IF WS-SUC-TIP-DOC EQUAL WS-DOC-ANT                           00480000
+              IF WS-SUC-SEXO EQUAL WS-SEXO-ANT                          00490000
+                 ADD 1 TO WS-SUB-TOT-SEXO                               00500000
+              ELSE                                                      00510000
+                 PERFORM 2130-I-CORTE-CONTROL-SEXO THRU                 00520000
+                         2130-F-CORTE-CONTROL-SEXO                      00530000
+              END-IF                                                    00540000
+                                                                        00550000
+           ELSE                                                         00560000
+               PERFORM 2120-I-CORTE-CONTROL-TIPD THRU                   00570000
+                       2120-F-CORTE-CONTROL-TIPD                        00580000
+           END-IF.                                                      00590000
+                                                                        00600000
+       2100-F-SEGUIR-PROCESO.                                           00610000
+           EXIT.                                                        00620000
+                                                                        00630000
+                                                                        00640000
+      ***************INICIO CORTE DE CONTROL POR TIPO DOC***************00650000
+       2120-I-CORTE-CONTROL-TIPD.                                       00660000
+                                                                        00670000
+                                                                        00672007
+           PERFORM 2130-I-CORTE-CONTROL-SEXO THRU                       00680000
+                   2130-F-CORTE-CONTROL-SEXO.                           00690000
+                                                                        00690101
+      *************  MOSTRAR TOTAL POR TIPO DOCUMENTO    ***************00690407
+                                                                        00690507
+           MOVE WS-SUB-TOT-TIPD TO WS-DISP                              00690608
+           DISPLAY 'TOTAL DOCUMENTO: ' WS-DOC-ANT ' '  WS-DISP          00690707
+           DISPLAY ' '                                                  00690809
+                                                                        00690907
+           IF NOT WS-FIN-PROCESO                                        00691004
+                                                                        00691104
+           PERFORM 2133-I-VER-DISPLAY      THRU                         00691201
+                   2133-F-VER-DISPLAY                                   00692004
+                                                                        00692104
+           ELSE                                                         00693004
+               DISPLAY ' '                                              00694004
+               DISPLAY '************************'                       00694104
+               DISPLAY '** FIN ARCHIVO; LEIDOS: ** ' WS-CONTADOR        00694204
+           END-IF.                                                      00695004
+                                                                        00890000
+           MOVE  WS-SUB-TOT-SEXO    TO WS-SUB-TOT-TIPD.                 00891008
+                                                                        00892007
+       2120-F-CORTE-CONTROL-TIPD.                                       00900000
+           EXIT.                                                        00910000
+                                                                        00920000
+      ***************INICIO CORTE DE CONTROL POR SEXO*******************00930000
+       2130-I-CORTE-CONTROL-SEXO.                                       00940000
+                                                                        00950000
+           ADD   WS-SUB-TOT-SEXO    TO WS-SUB-TOT-TIPD.                 00951008
+                                                                        00952007
+           MOVE WS-SUB-TOT-SEXO TO WS-DISP                              00960000
+                                                                        00970000
+           EVALUATE WS-SEXO-ANT                                         00980000
+               WHEN WS-F                                                00990000
+                    DISPLAY WS-LITERAL-F    WS-DISP                     01000000
+                                                                        01010000
+               WHEN WS-M                                                01020000
+                    DISPLAY WS-LITERAL-M    WS-DISP                     01030000
+                                                                        01040000
+               WHEN WS-O                                                01050000
+                    DISPLAY WS-LITERAL-O    WS-DISP                     01051000
+                    DISPLAY ' '                                         01052000
+                                                                        01053000
+               WHEN OTHER                                               01054000
+                    CONTINUE                                            01055000
+                                                                        01056000
+           END-EVALUATE                                                 01056100
+                                                                        01056200
+           MOVE WS-SUC-SEXO TO WS-SEXO-ANT                              01056300
+           MOVE 1           TO WS-SUB-TOT-SEXO.                         01056400
+                                                                        01056500
+       2130-F-CORTE-CONTROL-SEXO.                                       01056600
+           EXIT.                                                        01056700
+                                                                        01056800
+      *************************                                         01056901
+       2133-I-VER-DISPLAY.                                              01057001
+      *************************                                         01057101
+           EVALUATE WS-SUC-TIP-DOC                                      01057201
+               WHEN WS-DU                                               01057301
+                    DISPLAY WS-DU ' ' WS-LITERAL-DU                     01057401
+                    MOVE WS-SUC-TIP-DOC TO WS-DOC-ANT                   01057501
+                                                                        01057601
+               WHEN WS-PA                                               01057701
+                    DISPLAY WS-PA ' ' WS-LITERAL-PA                     01057801
+                    MOVE WS-SUC-TIP-DOC TO WS-DOC-ANT                   01057901
+                                                                        01058001
+               WHEN WS-PE                                               01058101
+                    DISPLAY WS-PE ' ' WS-LITERAL-PE                     01058201
+                    MOVE WS-SUC-TIP-DOC TO WS-DOC-ANT                   01058301
+                                                                        01058401
+               WHEN OTHER                                               01058501
+                    DISPLAY WS-SUC-TIP-DOC ' ' WS-LITERAL-NE            01058703
+                    MOVE WS-SUC-TIP-DOC TO WS-DOC-ANT                   01058802
+                                                                        01058901
+           END-EVALUATE.                                                01059001
+                                                                        01059101
+       2133-F-VER-DISPLAY.                                              01059201
+           EXIT.                                                        01059301
+                                                                        01059401
+      *****************FIN INICIO CORTE DE CONTROL**********************01059500
+       9999-I-FIN.                                                      01059600
+                                                                        01059700
+           CLOSE CLICOB.                                                01059800
+           EVALUATE TRUE                                                01060000
+             WHEN WS-FS-NORMAL                                          01070000
+             WHEN WS-FS-FIN                                             01080000
+                  CONTINUE                                              01090000
+                                                                        01100000
+             WHEN OTHER                                                 01110000
+                DISPLAY '* ERROR EN CIERRE   DE ARCHIVO = ' WS-FS-CLICOB01120000
+           END-EVALUATE.                                                01130000
+                                                                        01140000
+       9999-F-FIN.                                                      01150000
+           EXIT.                                                        01160000
+      **********FIN CIERRE DE ARCHIVO Y CONTROL FILE STATUS************ 01170000
+                                                                        01180000

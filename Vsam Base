@@ -1,0 +1,201 @@
+       IDENTIFICATION DIVISION.                                         00010029
+        PROGRAM-ID VSAMBASE.                                            00020099
+      **************************************                            00040029
+      *UTILIZANDO UN REGISTRO VSAM Y       *                            00051099
+      *CREACION DE UN VSAM DE SALIDA       *                            00052099
+      **************************************                            00060029
+      *               DETALLE              *                            00070099
+      **************************************                            00080029
+      *USEN ESTO DE BASE SI LES HACE FALTA *                            00090099
+      **************************************                            00120029
+       ENVIRONMENT DIVISION.                                            00130029
+       CONFIGURATION SECTION.                                           00140029
+       SPECIAL-NAMES.                                                   00150069
+           DECIMAL-POINT IS COMMA.                                      00160070
+                                                                        00170070
+       INPUT-OUTPUT SECTION.                                            00180029
+       FILE-CONTROL.                                                    00190071
+                                                                        00191099
+           SELECT QSAM-E     ASSIGN DDQSAM                              00200099
+           FILE STATUS IS WS-FS-QSA.                                    00210099
+                                                                        00220029
+           SELECT VSAM-E     ASSIGN DDVSAM                              00221099
+                  ORGANIZATION IS INDEXED                               00222099
+                  ACCESS MODE IS SEQUENTIAL                             00223099
+                  RECORD KEY IS  VSAM-KEY-E                             00224099
+                  FILE STATUS IS WS-FS-VSE.                             00225099
+                                                                        00226099
+           SELECT VSAM-S     ASSIGN DDSALE                              00260099
+                  ORGANIZATION IS INDEXED                               00271099
+                  ACCESS MODE IS DYNAMIC                                00272099
+                  RECORD KEY IS  VSAM-KEY-S                             00273099
+                  FILE STATUS IS WS-FS-VSS.                             00274099
+                                                                        00280043
+       DATA DIVISION.                                                   00290029
+       FILE SECTION.                                                    00300029
+                                                                        00310096
+       FD QSAM-E                                                        00320099
+             BLOCK CONTAINS 0 RECORDS                                   00330029
+             RECORDING MODE IS F.                                       00340029
+                                                                        00350029
+       01 REG-QSA         PIC X(50).                                    00360099
+                                                                        00373099
+       FD VSAM-E.                                                       00380099
+       01  REG-VSAM-E.                                                  00380199
+           03  VSAM-KEY-E           PIC X(13).                          00380299
+           03  FILLER               PIC X(37).                          00380699
+                                                                        00430093
+       FD VSAM-S.                                                       00440099
+       01  REG-VSAM-S.                                                  00440199
+           03  VSAM-KEY-S           PIC X(13).                          00440299
+           03  FILLER               PIC X(37).                          00440699
+                                                                        00490043
+       WORKING-STORAGE SECTION.                                         00500000
+                                                                        00500199
+      *FILE STATUS ENTRADA Y SALIDA                                     00500299
+       77  WS-FS-QSA               PIC XX       VALUE SPACES.           00500399
+       77  WS-FS-VSE               PIC XX       VALUE SPACES.           00500499
+       77  WS-FS-VSS               PIC XX       VALUE SPACES.           00500599
+                                                                        00501099
+      *ESTRUCTURA ARCHIVO SALIDA                                        00564999
+       01  WS-REG-SALIDA.                                               00565099
+           03  WS-SAL-TIP-DOC      PIC X(02)    VALUE SPACES.           00565199
+           03  WS-SAL-NRO-DOC      PIC 9(11)    VALUE ZEROS.            00565299
+           03  WS-SAL-NRO-SUC      PIC 9(02)    VALUE ZEROS.            00565399
+           03  WS-SAL-TIP-CUE      PIC XX       VALUE SPACES.           00565499
+           03  WS-SAL-NRO          PIC 9(03)    VALUE ZEROS.            00565599
+           03  WS-SAL-SALDO        PIC S9(09)V99 COMP-3 VALUE ZEROS.    00565699
+           03  WS-SAL-AAAAMMDD     PIC 9(08)    VALUE ZEROS.            00565799
+           03  WS-SAL-SEXO         PIC X        VALUE SPACES.           00565899
+           03  WS-SAL-NOMAPE       PIC X(15)    VALUE SPACES.           00565999
+                                                                        00566099
+      *FIN DE LECTURA PROGRAMA                                          01010099
+       01  WS-STATUS-FIN           PIC X.                               01020094
+           88  WS-FIN-LECTURA                   VALUE 'Y'.              01030099
+           88  WS-NO-FIN-LECTURA                VALUE 'N'.              01040099
+                                                                        01041099
+      *FIN DE LECTURA QSAM                                              01050099
+       01  WS-STATUS-FIN-QSA       PIC X.                               01060099
+           88  WS-FIN-QSA                       VALUE 'Y'.              01070099
+           88  WS-NO-FIN-QSA                    VALUE 'N'.              01080099
+                                                                        01130096
+      *FIN DE LECTURA VSAM ENTRADA                                      01131099
+       01  WS-STATUS-FIN-VSE       PIC X.                               01132099
+           88  WS-FIN-VSE                       VALUE 'Y'.              01133099
+           88  WS-NO-FIN-VSE                    VALUE 'N'.              01134099
+                                                                        01135099
+      ***************************************************************.  01140000
+                                                                        01145099
+       PROCEDURE DIVISION.                                              01150099
+      **************************************                            01160000
+      *                                    *                            01170000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            01180000
+      *                                    *                            01190000
+      **************************************                            01200000
+       MAIN-PROGRAM-INICIO.                                             01210001
+                                                                        01220044
+      *CHEQUEO FS E INICIALIZO LO QUE HAGA FALTA                        01230044
+           PERFORM 1000-I-INICIO  THRU                                  01240001
+                   1000-F-INICIO.                                       01250001
+                                                                        01260044
+      *REALIZO LOS PROCESOS CORRESPONDIENTES                            01270046
+           PERFORM 2000-I-PROCESO  THRU                                 01280001
+                   2000-F-PROCESO UNTIL WS-FIN-LECTURA.                 01290056
+                                                                        01300044
+      *CIERRO LOS ARCHIVOS,CHEQUEO FS,GUARDO REGISTROS.                 01310044
+           PERFORM 9999-I-FINAL    THRU                                 01320001
+                   9999-F-FINAL.                                        01330004
+                                                                        01340001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      01350001
+                                                                        01360001
+       1000-I-INICIO.                                                   01370001
+                                                                        01380050
+      *SETEO DE FLAGS PARA PODER COMENZAR                               01381099
+                                                                        01382099
+           SET WS-NO-FIN-QSA     TO TRUE                                01390099
+           SET WS-NO-FIN-VSE     TO TRUE                                01400099
+           SET WS-NO-FIN-LECTURA TO TRUE                                01410099
+                                                                        01420099
+      *CHEQUEO ARCHIVOS DE ENTRADA                                      01430099
+                                                                        01440044
+           OPEN INPUT QSAM-E.                                           01450099
+           EVALUATE WS-FS-QSA                                           01460099
+            WHEN 00                                                     01470099
+             CONTINUE                                                   01510099
+            WHEN OTHER                                                  01520099
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-QSA        01530099
+             SET WS-FIN-LECTURA  TO TRUE                                01531099
+           END-EVALUATE.                                                01532099
+                                                                        01533099
+           OPEN INPUT VSAM-E                                            01540099
+           EVALUATE WS-FS-VSE                                           01550099
+            WHEN 00                                                     01560093
+             CONTINUE                                                   01563099
+            WHEN OTHER                                                  01580093
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-VSE        01590099
+             SET WS-FIN-LECTURA  TO TRUE                                01600099
+           END-EVALUATE.                                                01610093
+                                                                        01611099
+      *CHEQUEO ARCHIVO DE SALIDA                                        01630099
+                                                                        01640044
+           OPEN I-O VSAM-S.                                             01650099
+           EVALUATE WS-FS-VSS                                           01660099
+            WHEN 00                                                     01670044
+             CONTINUE                                                   01680044
+            WHEN OTHER                                                  01690044
+             DISPLAY 'ARCHIVO SALIDA CORRUPTO, ERROR ' WS-FS-VSS        01700099
+             SET WS-FIN-LECTURA  TO TRUE                                01710099
+           END-EVALUATE.                                                01720044
+                                                                        01721099
+       1000-F-INICIO.                                                   01840001
+                                                                        01850021
+           EXIT.                                                        01860000
+                                                                        01870021
+      **************************************                            01880000
+      *                                    *                            01890000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            01900000
+      *                                    *                            01910000
+      **************************************                            01920000
+                                                                        01930057
+       2000-I-PROCESO.                                                  01940089
+                                                                        02100099
+       2000-F-PROCESO. EXIT.                                            02110089
+                                                                        02120089
+      ************************************************************      02130089
+                                                                        02130199
+                                                                        02600099
+                                                                        02604099
+      ********************************************************          02610089
+                                                                        02620089
+       9999-I-FINAL.                                                    02630089
+      *CIERRO LOS ARCHIVOS DE ENTRADA Y SALIDA                          02640091
+      *CERRAR ARCHIVOS ENTRADA                                          02700098
+             CLOSE QSAM-E                                               02710099
+             EVALUATE WS-FS-QSA                                         02720099
+              WHEN 00                                                   02730089
+                 CONTINUE                                               02740089
+              WHEN OTHER                                                02750089
+               DISPLAY 'ARCHIVO CLIENTE CORRUPTO,ERROR ' WS-FS-QSA      02760099
+               SET WS-FIN-LECTURA TO TRUE                               02770089
+             END-EVALUATE                                               02780094
+                                                                        02790094
+             CLOSE VSAM-E                                               02800099
+             EVALUATE WS-FS-VSE                                         02810099
+              WHEN 00                                                   02820094
+                 CONTINUE                                               02830094
+              WHEN OTHER                                                02840094
+               DISPLAY 'ARCHIVO MOVIM CORRUPTO,ERROR ' WS-FS-VSE        02850099
+               SET WS-FIN-LECTURA TO TRUE                               02860094
+             END-EVALUATE                                               02870094
+                                                                        02880089
+      *CERRAR ARCHIVO SALIDA                                            02890089
+             CLOSE VSAM-S                                               02900099
+             EVALUATE WS-FS-VSS                                         02910099
+              WHEN 00                                                   02920089
+                 CONTINUE                                               02930089
+              WHEN OTHER                                                02940089
+               DISPLAY 'ARCHIVO SALIDA CORRUPTO,ERROR ' WS-FS-VSS       02950099
+               SET WS-FIN-LECTURA TO TRUE                               02960089
+             END-EVALUATE.                                              02970099
+                                                                        02974099
+       9999-F-FINAL. EXIT.                                              03000089

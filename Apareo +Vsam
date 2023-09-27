@@ -1,0 +1,363 @@
+       CBL TEST                                                         00001000
+       IDENTIFICATION DIVISION.                                         00002000
+       PROGRAM-ID PGMDB251.                                             00004099
+      **********************************************************        00016800
+      *      EJERCICIO 44                                      *        00016999
+      **********************************************************        00017000
+      *  FECHA   *    DETALLE        * COD *                            00018000
+      **************************************                            00019000
+      *          *                   *     *                            00019100
+      *22/11/2022*COMIENZO EJERCICIO *     *                            00019299
+      *          *                   *     *                            00019321
+      **************************************                            00019400
+       ENVIRONMENT DIVISION.                                            00019500
+       CONFIGURATION SECTION.                                           00019600
+       SPECIAL-NAMES.                                                   00019700
+           DECIMAL-POINT IS COMMA.                                      00019800
+                                                                        00019900
+       INPUT-OUTPUT SECTION.                                            00020000
+       FILE-CONTROL.                                                    00020100
+                                                                        00020299
+             SELECT VSAM-E  ASSIGN DDVSAM                               00023599
+                  ORGANIZATION IS INDEXED                               00023699
+                  ACCESS MODE IS SEQUENTIAL                             00023799
+                  RECORD KEY IS  VSAM-KEY-E                             00023899
+                  FILE STATUS IS WS-FS-VSA.                             00023999
+                                                                        00024099
+                                                                        00024199
+       DATA DIVISION.                                                   00024200
+       FILE SECTION.                                                    00024300
+                                                                        00025099
+       FD VSAM-E.                                                       00041099
+       01  REG-VSAM.                                                    00041199
+           03  VSAM-KEY-E.                                              00041299
+             05  VSAM-KEY-1           PIC X(02).                        00041399
+             05  VSAM-KEY-2           PIC X(03).                        00041499
+           03  FILLER               PIC X(18).                          00041799
+                                                                        00041899
+      **************************************                            00041900
+       WORKING-STORAGE SECTION.                                         00042000
+      **************************************                            00042107
+                                                                        00042299
+      *FILE STATUS ARCHIVOS Y TABLAS                                    00042399
+       77  WS-FS-VSA           PIC XX                   VALUE SPACES.   00042599
+       77  WS-SQLCODE          PIC +++999 USAGE DISPLAY VALUE ZEROES.   00042699
+                                                                        00042799
+      *CONTADORES                                                       00042899
+       77  WS-CONT-LEI         PIC 9(3)                 VALUE ZEROES.   00043199
+       77  WS-CONT-ENC         PIC 9(3)                 VALUE ZEROES.   00043299
+       77  WS-CONT-NOE         PIC 9(3)                 VALUE ZEROES.   00043399
+                                                                        00043499
+      *CLAVES PARA PODER COMPARAR                                       00043599
+       01  WS-TAB.                                                      00043699
+           03 WS-CUE-TIP           PIC 99        VALUE ZEROES.          00043799
+           03 WS-CUE-NRO           PIC 9(5)      VALUE ZEROES.          00043899
+                                                                        00044099
+       01  WS-VSA.                                                      00044199
+           03 WS-CUE1-TIP          PIC 99        VALUE ZEROES.          00044299
+           03 WS-CUE1-NRO          PIC 9(5)      VALUE ZEROES.          00044399
+                                                                        00044599
+      *DISPLAY                                                          00044699
+       77  WS-NOMAPE           PIC X(30)         VALUE SPACES.          00044799
+                                                                        00044899
+      *ACUMUALDORES Y COMPARADORES                                      00044999
+       77  WS-SALDO-ACUM       PIC S9(15)V99     VALUE ZEROES.          00045099
+       77  WS-SALDO-TOT        PIC S9(15)V99     VALUE ZEROES.          00045199
+                                                                        00045299
+      *VARIABLES PARA DISPLAY                                           00045399
+       01  WS-SALDO-DISP   PIC +ZZZZ.ZZZ.Z99,99 VALUE ZEROS.            00045699
+       01  WS-CONT-DISP        PIC ZZZZ9         VALUE ZEROES.          00045799
+                                                                        00045899
+      *FIN DE LECTURA PROGRAMA                                          00045999
+       01  WS-STATUS-FIN       PIC X.                                   00046099
+           88  WS-FIN-LECTURA                           VALUE 'Y'.      00046199
+           88  WS-NO-FIN-LECTURA                        VALUE 'N'.      00046299
+                                                                        00046399
+      *STATUS CLIENTE                                                   00046499
+       01  WS-STATUS-CLIENTE   PIC X.                                   00046599
+           88  WS-CLIENTE-OK                            VALUE 'Y'.      00046699
+           88  WS-CLIENTE-NO-OK                         VALUE 'N'.      00046799
+                                                                        00046899
+      *FIN DE LECTURA VSAM                                              00046999
+       01  WS-STATUS-FIN-VSA       PIC X.                               00047099
+           88  WS-FIN-VSA                        VALUE 'Y'.             00048099
+           88  WS-NO-FIN-VSA                     VALUE 'N'.             00049099
+                                                                        00049199
+      *FIN DE LECTURA TABLA                                             00050099
+       01  WS-STATUS-FIN-TAB       PIC X.                               00051099
+           88  WS-FIN-TAB                        VALUE 'Y'.             00052099
+           88  WS-NO-FIN-TAB                     VALUE 'N'.             00052199
+                                                                        00052800
+      *ESTRUCTURA ARCHIVO VSAM                                          00052999
+       COPY NOVCTA.                                                     00053099
+                                                                        00079999
+      * INCLUDE PARA SQL                                                00083017
+                                                                        00083117
+            EXEC SQL                                                    00083217
+              INCLUDE SQLCA                                             00083317
+            END-EXEC.                                                   00083417
+                                                                        00083556
+            EXEC SQL                                                    00084099
+              INCLUDE TBCURCTA                                          00084199
+            END-EXEC.                                                   00084299
+                                                                        00084399
+            EXEC SQL                                                    00084499
+              INCLUDE TBCURCLI                                          00084599
+            END-EXEC.                                                   00084699
+                                                                        00084799
+            EXEC SQL                                                    00084899
+              DECLARE ITEM_CURSOR CURSOR                                00084999
+              FOR                                                       00085099
+              SELECT TIPCUEN, NROCUEN, NROCLI, SALDO                    00086099
+                   FROM ITPARUT.TBCURCTA                                00086299
+                   WHERE SUCUEN = 1                                     00086699
+                   ORDER BY TIPCUEN ASC , NROCUEN  ASC                  00086799
+            END-EXEC.                                                   00086999
+                                                                        00087099
+      ***************************************************************.  00087117
+       PROCEDURE DIVISION.                                              00087299
+      **************************************                            00087317
+      *                                    *                            00087417
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00087517
+      *                                    *                            00087617
+      **************************************                            00087717
+       MAIN-PROGRAM.                                                    00087817
+                                                                        00087917
+           PERFORM 1000-I-INICIO   THRU                                 00088017
+                   1000-F-INICIO.                                       00088117
+                                                                        00088217
+           PERFORM 2000-I-PROCESO  THRU                                 00088399
+                   2000-F-PROCESO    UNTIL WS-FIN-LECTURA.              00088499
+                                                                        00088517
+           PERFORM 9999-I-FINAL    THRU                                 00088617
+                   9999-F-FINAL.                                        00088717
+                                                                        00088817
+       F-MAIN-PROGRAM. GOBACK.                                          00088917
+                                                                        00089017
+      **************************************                            00089117
+      *                                    *                            00089217
+      *  CUERPO INICIO APERTURA ARCHIVOS   *                            00089317
+      *                                    *                            00089417
+      **************************************                            00089517
+       1000-I-INICIO.                                                   00089617
+                                                                        00089799
+           SET WS-NO-FIN-LECTURA       TO TRUE.                         00089899
+           SET WS-NO-FIN-VSA           TO TRUE.                         00089999
+           SET WS-CLIENTE-NO-OK        TO TRUE.                         00090099
+           SET WS-NO-FIN-TAB           TO TRUE.                         00090199
+           INITIALIZE                     WS-SALDO-ACUM                 00090299
+                                          WS-CONT-LEI                   00090399
+                                          WS-CONT-ENC                   00090499
+                                          WS-CONT-NOE                   00090599
+                                                                        00090699
+      * ABRO ENTRADAS Y SALIDAS                                         00090799
+           OPEN INPUT VSAM-E.                                           00090899
+           EVALUATE WS-FS-VSA                                           00090999
+            WHEN 00                                                     00091099
+             PERFORM 2500-I-LEER-VSA THRU                               00091199
+                     2500-F-LEER-VSA                                    00091299
+            WHEN OTHER                                                  00091399
+             DISPLAY 'ARCHIVO VSAM CORRUPTO, ERROR ' WS-FS-VSA          00091499
+             SET WS-FIN-LECTURA  TO TRUE                                00091599
+           END-EVALUATE                                                 00091699
+                                                                        00091799
+      * OPEN CURSOR                                                     00091899
+           EXEC SQL                                                     00091999
+              OPEN ITEM_CURSOR                                          00092099
+           END-EXEC.                                                    00092199
+           IF SQLCODE NOT EQUAL ZEROS                                   00092299
+              MOVE SQLCODE   TO WS-SQLCODE                              00092399
+              DISPLAY '* ERROR OPEN CURSOR      = ' WS-SQLCODE          00092499
+              SET  WS-FIN-LECTURA TO TRUE                               00092599
+           END-IF                                                       00092699
+             PERFORM 2600-I-LEER-TAB THRU                               00092799
+                     2600-F-LEER-TAB.                                   00092899
+                                                                        00092999
+                                                                        00098599
+       1000-F-INICIO.   EXIT.                                           00099599
+                                                                        00099699
+      **************************************                            00099799
+      *                                    *                            00099899
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00099999
+      *                                    *                            00100099
+      **************************************                            00100199
+       2000-I-PROCESO.                                                  00100299
+                                                                        00100399
+           IF WS-TAB = WS-VSA                                           00100499
+      *SI SON IGUALES, AGREGO SALDO Y LEO SIGUIENTE MOV                 00100699
+              ADD 1 TO WS-CONT-ENC                                      00100799
+              PERFORM 3000-I-AGREGAR-SALDO  THRU                        00100899
+                      3000-F-AGREGAR-SALDO                              00100999
+              PERFORM 3300-I-DISPLAY      THRU                          00101099
+                      3300-F-DISPLAY                                    00101199
+              PERFORM 2500-I-LEER-VSA THRU                              00101299
+                      2500-F-LEER-VSA                                   00101399
+              IF WS-TAB NOT EQUAL WS-VSA                                00101499
+              DISPLAY 'CLIENTE SIN NOVEDADES ' WS-CUE-TIP               00101599
+                        ' NROCUEN ' WS-CUE-NRO                          00101699
+              END-IF                                                    00101899
+      *SI EL MOVIMIENTO ES MENOR,INCREMENTO CONTADOR Y LEO SIGUIENTE MOV00108099
+           ELSE                                                         00108199
+             IF WS-TAB > WS-VSA                                         00108399
+              ADD 1 TO WS-CONT-NOE                                      00108499
+              DISPLAY 'NOVEDAD NO ENCONTRADA ' WS-CUE1-TIP              00108599
+                        ' NROCUEN ' WS-CUE1-NRO                         00108699
+              PERFORM 2500-I-LEER-VSA THRU                              00108799
+                      2500-F-LEER-VSA                                   00108899
+             ELSE                                                       00108999
+              PERFORM 2600-I-LEER-TAB  THRU                             00109699
+                      2600-F-LEER-TAB                                   00109799
+             END-IF                                                     00109899
+           END-IF.                                                      00109999
+                                                                        00110099
+      *SI NO HAY MAS REGISTROS DE LOS 2, SE TERMINA EL PROGRAMA         00110199
+           IF WS-FIN-VSA AND WS-FIN-TAB                                 00110299
+             SET WS-FIN-LECTURA TO TRUE                                 00110399
+           END-IF.                                                      00110499
+                                                                        00110599
+       2000-F-PROCESO. EXIT.                                            00110699
+                                                                        00110799
+       2500-I-LEER-VSA.                                                 00110899
+                                                                        00110999
+      *LECTURA DE ARCHIVO VSAM Y LLENADO DE CLAVES PARA COMPARAR        00111099
+           READ VSAM-E INTO WS-REG-CTA                                  00111199
+            EVALUATE WS-FS-VSA                                          00111299
+             WHEN '00'                                                  00111399
+      *LLENO LA CLAVE CON LOS DATOS DE SUC1                             00111499
+           ADD 1 TO WS-CONT-LEI                                         00111599
+              MOVE WS-NROCUEN     TO WS-CUE1-NRO                        00111699
+              MOVE WS-TIPCUEN     TO WS-CUE1-TIP                        00111799
+             WHEN '10'                                                  00111899
+      *AL FINAL DEL ARCHIVO, MUEVO EL MOVIMIENTO A HIGH-VALUES          00111999
+              MOVE HIGH-VALUES TO WS-VSA                                00112099
+              SET WS-FIN-VSA     TO TRUE                                00112199
+             WHEN OTHER                                                 00112299
+              DISPLAY 'ARCHIVO SUCURSAL CON ERROR EN FS :' WS-FS-VSA    00112399
+              SET WS-FIN-LECTURA TO TRUE                                00112499
+             END-EVALUATE.                                              00112599
+                                                                        00112699
+       2500-F-LEER-VSA. EXIT.                                           00112799
+                                                                        00112899
+       2600-I-LEER-TAB.                                                 00112999
+                                                                        00113099
+           EXEC SQL                                                     00113199
+              FETCH ITEM_CURSOR                                         00113699
+              INTO                                                      00113799
+                   :WT-TIPCUEN,                                         00113899
+                   :WT-NROCUEN,                                         00113999
+                   :WT-NROCLI,                                          00114099
+                   :WT-SALDO                                            00114199
+                                                                        00114299
+           END-EXEC.                                                    00114399
+                                                                        00114499
+           MOVE SQLCODE  TO WS-SQLCODE                                  00114599
+           EVALUATE TRUE                                                00114699
+             WHEN SQLCODE EQUAL ZEROS                                   00114799
+      *LLENO CLAVES PARA COMPARAR                                       00114899
+              MOVE WT-TIPCUEN    TO WS-CUE-TIP                          00114999
+              MOVE WT-NROCUEN    TO WS-CUE-NRO                          00115099
+             WHEN SQLCODE EQUAL +100                                    00115699
+                MOVE HIGH-VALUES TO WS-TAB                              00115799
+                SET WS-FIN-TAB     TO TRUE                              00115899
+                EXEC SQL                                                00116099
+                   CLOSE ITEM_CURSOR                                    00116199
+                END-EXEC                                                00116299
+                IF SQLCODE NOT EQUAL ZEROS                              00116399
+                   MOVE SQLCODE  TO WS-SQLCODE                          00116499
+                   DISPLAY '* ERROR CLOSE CURSOR      = ' WS-SQLCODE    00116599
+                END-IF                                                  00116699
+                                                                        00116799
+             WHEN OTHER                                                 00116899
+                MOVE SQLCODE  TO WS-SQLCODE                             00116999
+                DISPLAY 'ERROR FETCH CURSOR 1: '   WS-SQLCODE           00117099
+                SET WS-FIN-LECTURA TO TRUE                              00117199
+           END-EVALUATE.                                                00117299
+                                                                        00118099
+       2600-F-LEER-TAB. EXIT.                                           00118199
+                                                                        00118299
+       3000-I-AGREGAR-SALDO.                                            00121099
+                                                                        00121199
+           PERFORM 3100-I-CLI-OK  THRU                                  00121699
+                   3100-F-CLI-OK                                        00121799
+                                                                        00121899
+           IF WS-CLIENTE-OK                                             00121999
+                MOVE ZEROES       TO WS-SALDO-ACUM                      00122099
+                ADD WS-SALDO      TO WS-SALDO-ACUM                      00122199
+                ADD WT-SALDO      TO WS-SALDO-ACUM                      00122299
+                SET WS-CLIENTE-NO-OK  TO TRUE                           00122399
+           ELSE                                                         00122499
+                DISPLAY 'CLIENTE NO ENCONTRADO ' WT-NROCLI              00122599
+           END-IF.                                                      00122799
+                                                                        00123099
+       3000-F-AGREGAR-SALDO. EXIT.                                      00130099
+                                                                        00159499
+       3100-I-CLI-OK.                                                   00159599
+      * REVISO SI EL CLIENTE EXISTE EN LA TABLA TBCURCLI                00159699
+                                                                        00159799
+              EXEC SQL                                                  00159899
+                SELECT NOMAPE                                           00159999
+                INTO :WD-NOMAPE                                         00160099
+                FROM ITPARUT.TBCURCLI                                   00160199
+                WHERE NROCLI = :WT-NROCLI                               00160299
+              END-EXEC.                                                 00160399
+                                                                        00160499
+           MOVE SQLCODE  TO WS-SQLCODE                                  00160599
+           EVALUATE TRUE                                                00160699
+             WHEN SQLCODE EQUAL ZEROS                                   00160799
+      *MUEVO EL NOMBRE AL CAMPO CORRESPONDIENTE PARA DISPLAYAR          00160899
+                MOVE WD-NOMAPE TO WS-NOMAPE                             00160999
+                SET WS-CLIENTE-OK TO TRUE                               00161099
+             WHEN SQLCODE EQUAL +100                                    00161199
+      *CLIENTE NO EXISTE EN LA TABLA                                    00161299
+                SET WS-CLIENTE-NO-OK TO TRUE                            00161399
+             WHEN OTHER                                                 00161499
+                MOVE SQLCODE  TO WS-SQLCODE                             00161599
+                DISPLAY 'ERROR FETCH CURSOR 1: '   WS-SQLCODE           00161699
+                SET WS-FIN-LECTURA TO TRUE                              00161799
+           END-EVALUATE.                                                00161899
+                                                                        00161999
+       3100-F-CLI-OK. EXIT.                                             00162099
+                                                                        00162199
+       3300-I-DISPLAY.                                                  00162299
+                                                                        00162399
+           DISPLAY  ' '                                                 00162499
+           MOVE       WT-TIPCUEN     TO WS-CONT-DISP                    00162599
+           DISPLAY 'TIPO DE CUENTA    ' WS-CONT-DISP                    00162699
+           MOVE       WT-NROCUEN     TO WS-CONT-DISP                    00162799
+           DISPLAY 'NUMERO  DE CUENTA ' WS-CONT-DISP                    00162899
+           MOVE       WT-NROCLI      TO WS-CONT-DISP                    00162999
+           DISPLAY 'NUMERO DE CLIENTE ' WS-CONT-DISP                    00163099
+           DISPLAY 'NOMBRE DE CLIENTE ' WS-NOMAPE                       00163199
+           MOVE       WS-SALDO-ACUM  TO WS-SALDO-DISP                   00163299
+           DISPLAY 'SALDO ACTUALIZADO ' WS-SALDO-DISP.                  00163399
+           ADD WS-SALDO-ACUM         TO WS-SALDO-TOT.                   00163499
+           DISPLAY  ' '.                                                00163599
+                                                                        00164199
+       3300-F-DISPLAY. EXIT.                                            00164299
+                                                                        00164399
+      **************************************                            00164499
+      *                                    *                            00164599
+      *  CUERPO FINAL CIERRE DE FILES      *                            00164699
+      *                                    *                            00164799
+      **************************************                            00164899
+                                                                        00164999
+       9999-I-FINAL.                                                    00165099
+                                                                        00165199
+           DISPLAY 'TOTALES LEIDOS_-------> ' WS-CONT-LEI               00165299
+           DISPLAY 'TOTALES ENCONTRADOS---> ' WS-CONT-ENC               00165399
+           DISPLAY 'TOTALES NO ENCONTRADOS> ' WS-CONT-NOE               00165499
+           MOVE WS-SALDO-TOT               TO WS-SALDO-DISP             00165599
+           DISPLAY 'SALDO TOTAL ACUMULADO-> ' WS-SALDO-DISP             00165699
+                                                                        00165799
+                EXEC SQL                                                00165899
+                  ROLLBACK                                              00165999
+                END-EXEC                                                00166099
+                                                                        00166199
+      *CIERRO ARCHIVOS DE ENTRADA Y SALIDA                              00166299
+           CLOSE VSAM-E                                                 00166399
+              IF WS-FS-VSA  IS NOT EQUAL '00'                           00166499
+                DISPLAY '* ERROR EN CLOSE SALIDA  = '                   00166599
+                                            WS-FS-VSA                   00166699
+             END-IF.                                                    00166799
+       9999-F-FINAL.                                                    00167099
+           EXIT.                                                        00170017

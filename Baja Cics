@@ -1,0 +1,238 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. PGMBAJ51.
+       DATA DIVISION.
+       FILE SECTION.
+       WORKING-STORAGE SECTION.
+
+       01  WS-RESP       PIC S9(04) COMP.
+       01  WS-LONG       PIC S9(04) COMP.
+       01  WS-EXIT       PIC X(30)  VALUE ' FIN TRANSACCION T451'.
+       01  WS-ERROR      PIC X(30)  VALUE 'TECLA ERRONEA  '.
+       01  WS-ERR        PIC X(30)  VALUE SPACES.
+
+       01  WS-DATOS.
+          03 WS-CLAVE.
+            05 WS-TIPDAT   PIC XX             VALUE SPACES.
+            05 WS-NUMDAT   PIC 9(11)          VALUE ZEROES.
+          03 WS-NOMDAT   PIC X(30)          VALUE SPACES.
+          03 WS-SEXDAT   PIC X(01)          VALUE SPACES.
+          03 WS-FECDAT.
+             05 WS-ANIO  PIC 9(4)           VALUE ZEROES.
+             05 WS-MES   PIC 9(2)           VALUE ZEROES.
+             05 WS-DIA   PIC 9(2)           VALUE ZEROES.
+          03 FILLER      PIC X(108)         VALUE SPACES.
+
+      *VARIABLES PARA FECHA
+       01 WS-ABSTIME        PIC S9(16) COMP VALUE +0.
+       01 WS-FECHA          PIC X(10)       VALUE SPACES.
+       01 WS-SEP-FEC        PIC X           VALUE '/'.
+
+
+       01 WS-DATASET-LEN       PIC S9(04) COMP VALUE 160.
+
+       COPY MAP0451.
+       COPY DFHAID.
+       COPY DFHBMSCA.
+
+       01  REG-PERSONA.
+           03  PER-TIP-DOC            PIC X(02).
+           03  PER-NRO-DOC            PIC 9(11).
+           03  PER-CLI-NRO            PIC 9(03).
+           03  PER-NOMAPE             PIC X(30).
+           03  PER-CLI-AAAAMMDD       PIC 9(08).
+           03  PER-DIRECCION          PIC X(30).
+           03  PER-LOCALIDAD          PIC X(15).
+           03  PER-EMAIL              PIC X(30).
+           03  PER-TELEFONO           PIC X(15).
+           03  PER-SEXO               PIC X    .
+           03  FILLER                 PIC X(15).
+       01  WS-VAL-ERROR         PIC X.
+           88  WS-VAL-OK                         VALUE 'Y'.
+           88  WS-VAL-NO-OK                      VALUE 'N'.
+
+
+
+       PROCEDURE DIVISION.
+
+       MAIN-PROGRAM.
+
+           PERFORM 1000-I-INICIO THRU 1000-F-INICIO.
+
+           PERFORM 2000-I-PROCESO THRU 2000-F-PROCESO.
+
+           PERFORM 9999-I-FINAL   THRU 9999-F-FINAL.
+
+       1000-I-INICIO.
+
+      * SE INICIALIZA EL MAPA Y SE MUESTRA EN PANTALLA
+           IF EIBCALEN = 0
+             MOVE LOW-VALUES TO MAP0451O
+             MOVE 'INGRESE LOS DATOS Y PRESIONE ENTER' TO MSGO
+             MOVE LENGTH OF MAP0451O TO WS-LONG
+             PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+             EXEC CICS
+                  SEND MAP ('MAP0451')
+                  MAPSET ('MAP0451')
+                  LENGTH (WS-LONG)
+                  ERASE
+                  FREEKB
+             END-EXEC
+           END-IF.
+
+       1000-F-INICIO. EXIT.
+
+       2000-I-PROCESO.
+
+      *SE RECIBEN LOS DATOS INGRESADOS Y SE EVALUA LA TECLA PRESIONADA
+               EXEC CICS
+                    RECEIVE MAP    ('MAP0451')
+                            MAPSET ('MAP0451')
+                            INTO   (MAP0451I)
+               END-EXEC
+           EVALUATE EIBAID
+             WHEN DFHENTER
+               PERFORM 3000-I-ENTER  THRU  3000-F-ENTER
+             WHEN DFHPF3
+               PERFORM 3100-I-PF3    THRU  3100-F-PF3
+             WHEN DFHPF12
+               PERFORM 3200-I-PF12   THRU  3200-F-PF12
+             WHEN OTHER
+               PERFORM 3300-I-OTHER  THRU  3300-F-OTHER
+           END-EVALUATE.
+
+       2000-F-PROCESO. EXIT.
+
+       3000-I-ENTER.
+
+      *SE EVALUAN LOS DATOS INGRESADOS
+
+           MOVE TIPDOCI TO WS-TIPDAT
+           MOVE NUMDOCI TO WS-NUMDAT
+           PERFORM 7000-I-BORRAR  THRU 7000-F-BORRAR
+           PERFORM 6000-I-FECHA   THRU 6000-F-FECHA
+           EXEC CICS
+              SEND MAP ('MAP0451')
+              MAPSET ('MAP0451')
+              FROM (MAP0451O)
+              LENGTH (WS-LONG)
+              ERASE
+           END-EXEC.
+
+       3000-F-ENTER. EXIT.
+
+       3100-I-PF3.
+
+      *SE LIMPIA LA PANTALLA
+           MOVE LOW-VALUES TO  MAP0451O.
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+           EXEC CICS
+                SEND MAP ('MAP0451')
+                MAPSET ('MAP0451')
+                FROM (MAP0451O)
+                LENGTH (WS-LONG)
+                ERASE
+                FREEKB
+           END-EXEC.
+
+       3100-F-PF3. EXIT.
+
+       3200-I-PF12.
+
+           EXEC CICS
+              LINK PROGRAM('PGMALT51')
+           END-EXEC                   .
+
+       3200-F-PF12. EXIT.
+
+       3300-I-OTHER.
+
+      *SI PRESIONO OTRA TECLA MUESTRA UNA PANTALLA DE ERROR
+           MOVE WS-ERROR TO MSGO
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+           EXEC CICS
+                SEND MAP ('MAP0451')
+                MAPSET ('MAP0451')
+                FROM (MAP0451O)
+                LENGTH (WS-LONG)
+                ERASE
+           END-EXEC.
+
+       3300-F-OTHER. EXIT.
+
+       6000-I-FECHA.
+
+           EXEC CICS ASKTIME
+             ABSTIME (WS-ABSTIME)
+           END-EXEC.
+
+           EXEC CICS FORMATTIME
+             ABSTIME (WS-ABSTIME)
+             DDMMYYYY (WS-FECHA) DATESEP(WS-SEP-FEC)
+           END-EXEC.
+
+           MOVE WS-FECHA TO FECHAO.
+
+       6000-F-FECHA. EXIT.
+
+       7000-I-BORRAR.
+
+      *SE LEE EL VSAM BUSCANDO EL REGISTRO PEDIDO
+
+            EXEC CICS
+                 READ DATASET ('PERSO51')
+                 RIDFLD (WS-DATOS)
+                 INTO (REG-PERSONA)
+                 LENGTH (WS-DATASET-LEN)
+                 EQUAL
+                 RESP (WS-RESP)
+            END-EXEC.
+            EVALUATE WS-RESP
+              WHEN DFHRESP(NORMAL)
+               MOVE 'PRESIONE F4 PARA BORRAR F2 PARA BUSCAR OTRO'
+               TO MSGO
+               MOVE LENGTH OF MAP0451O TO WS-LONG
+               PERFORM 6000-I-FECHA THRU 6000-F-FECHA
+               EXEC CICS
+                    RECEIVE MAP    ('MAP0451')
+                            MAPSET ('MAP0451')
+                            INTO   (MAP0451I)
+               END-EXEC
+               EVALUATE EIBAID
+                 WHEN DFHPF4
+                  EXEC CICS DELETE
+                     FILE  ('PERSO51')
+                     RIDFLD (WS-DATOS)
+                     RESP  (WS-RESP)
+                  END-EXEC
+
+                  EVALUATE WS-RESP
+                   WHEN DFHRESP(NORMAL)
+                     MOVE 'CLIENTE BORRADO'       TO  MSGO
+                   WHEN OTHER
+                     MOVE 'ERROR EN LECTURA DEL ARCHIVO' TO MSGO
+                  END-EVALUATE
+                 WHEN DFHPF2
+                   MOVE 'INGRESE OTRO CLIENTE' TO  MSGO
+                 WHEN OTHER
+                   MOVE 'TECLA ERRONEA REINTENTE ' TO  MSGO
+               END-EVALUATE
+
+              WHEN DFHRESP(NOTFND)
+                MOVE LOW-VALUES TO MAP0451O
+                MOVE 'CLIENTE NO ENCONTRADO'    TO  MSGO
+              WHEN OTHER
+                MOVE 'ERROR EN LECTURA DEL ARCHIVO' TO MSGO
+              END-EVALUATE.
+
+
+       7000-F-BORRAR. EXIT.
+
+       9999-I-FINAL.
+
+           EXEC CICS
+                RETURN
+                TRANSID  ('T451')
+                COMMAREA (WS-DATOS)
+           END-EXEC.
+
+       9999-F-FINAL. EXIT.

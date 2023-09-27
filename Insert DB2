@@ -1,0 +1,207 @@
+       CBL TEST                                                         00001000
+       IDENTIFICATION DIVISION.                                         00002000
+      *                                                        *        00003000
+       PROGRAM-ID PGMDB251.                                             00004021
+      **********************************************************        00016800
+      *      EJERCICIO 35                                      *        00016921
+      **********************************************************        00017000
+      *  FECHA   *    DETALLE        * COD *                            00018000
+      **************************************                            00019000
+      *          *                   *     *                            00019100
+      *28/10/2022*COMIENZO EJERCICIO *     *                            00019221
+      *          *                   *     *                            00019321
+      **************************************                            00019400
+       ENVIRONMENT DIVISION.                                            00019500
+       CONFIGURATION SECTION.                                           00019600
+       SPECIAL-NAMES.                                                   00019700
+           DECIMAL-POINT IS COMMA.                                      00019800
+                                                                        00019900
+       INPUT-OUTPUT SECTION.                                            00020000
+       FILE-CONTROL.                                                    00020100
+                                                                        00020600
+             SELECT ENTRADA ASSIGN DDENTRA                              00022599
+                  ORGANIZATION IS INDEXED                               00022699
+                  ACCESS MODE IS SEQUENTIAL                             00022799
+                  RECORD KEY IS  VSAM-KEY-S                             00022899
+                  FILE STATUS IS WS-FS-ENT.                             00022999
+                                                                        00023199
+       DATA DIVISION.                                                   00023200
+       FILE SECTION.                                                    00023300
+                                                                        00024030
+       FD ENTRADA.                                                      00040199
+       01  REG-ENT.                                                     00040299
+           03  VSAM-KEY-S      PIC X(17).                               00040399
+           03  FILLER          PIC X(227).                              00040499
+                                                                        00040599
+       01 REG-ENTRADA          PIC X(244).                              00040999
+                                                                        00041000
+      **************************************                            00041100
+       WORKING-STORAGE SECTION.                                         00041200
+      **************************************                            00041307
+       77  WS-FS-ENT           PIC XX                   VALUE SPACES.   00041499
+       77  WS-NOV-LEI          PIC 9(3)                 VALUE ZEROES.   00041599
+       77  WS-NOV-GRA          PIC 9(3)                 VALUE ZEROES.   00041699
+       77  WS-NOV-ERR          PIC 9(3)                 VALUE ZEROES.   00041799
+       77  WS-DISP             PIC ZZ9                  VALUE ZEROES.   00041899
+       77  WS-SQLCODE          PIC +++999 USAGE DISPLAY VALUE ZEROES.   00041999
+                                                                        00042099
+       COPY TBVCLIEN.                                                   00042199
+                                                                        00042233
+      *FIN DE LECTURA PROGRAMA                                          00042331
+       01  WS-STATUS-FIN       PIC X.                                   00042499
+           88  WS-FIN-LECTURA                           VALUE 'Y'.      00042599
+           88  WS-NO-FIN-LECTURA                        VALUE 'N'.      00043099
+                                                                        00052800
+       01  WS-STATUS-SQL1      PIC X.                                   00052999
+           88  WS-FIN-SQL1                              VALUE 'Y'.      00053099
+           88  WS-NO-FIN-SQL1                           VALUE 'N'.      00053199
+                                                                        00065317
+      * INCLUDE PARA SQL                                                00065417
+                                                                        00065517
+            EXEC SQL                                                    00065617
+              INCLUDE SQLCA                                             00065717
+            END-EXEC.                                                   00065817
+                                                                        00068956
+            EXEC SQL                                                    00069099
+              INCLUDE TB99CLIE                                          00069199
+            END-EXEC.                                                   00069299
+                                                                        00069399
+      ***************************************************************.  00069417
+       PROCEDURE DIVISION.                                              00069517
+      **************************************                            00069617
+      *                                    *                            00069717
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00069817
+      *                                    *                            00069917
+      **************************************                            00070017
+       MAIN-PROGRAM.                                                    00070117
+                                                                        00070217
+           PERFORM 1000-I-INICIO   THRU                                 00070317
+                   1000-F-INICIO.                                       00070417
+                                                                        00070517
+           PERFORM 2000-I-PROCESO  THRU                                 00070617
+                   2000-F-PROCESO        UNTIL WS-FIN-LECTURA.          00070731
+                                                                        00070817
+           PERFORM 9999-I-FINAL    THRU                                 00070917
+                   9999-F-FINAL.                                        00071017
+                                                                        00071117
+       F-MAIN-PROGRAM. GOBACK.                                          00071217
+                                                                        00071317
+      **************************************                            00071417
+      *                                    *                            00071517
+      *  CUERPO INICIO APERTURA ARCHIVOS   *                            00071617
+      *                                    *                            00071717
+      **************************************                            00071817
+       1000-I-INICIO.                                                   00071917
+                                                                        00072099
+           SET WS-NO-FIN-LECTURA       TO TRUE.                         00072199
+           SET WS-NO-FIN-SQL1          TO TRUE.                         00072299
+                                                                        00072400
+           OPEN INPUT ENTRADA.                                          00072599
+           IF WS-FS-ENT    IS NOT EQUAL '00'                            00072699
+              DISPLAY '* ERROR EN OPEN ENTRADA = ' WS-FS-ENT            00072799
+              SET  WS-FIN-LECTURA      TO TRUE                          00072999
+           END-IF.                                                      00073000
+                                                                        00074000
+       1000-F-INICIO.   EXIT.                                           00079300
+                                                                        00079400
+      **************************************                            00079500
+      *                                    *                            00079600
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00079700
+      *                                    *                            00079800
+      **************************************                            00079900
+       2000-I-PROCESO.                                                  00080000
+                                                                        00080153
+           PERFORM 2100-I-LECTURA THRU                                  00081099
+                   2200-F-INSERT  UNTIL WS-FIN-LECTURA.                 00085199
+                                                                        00085221
+           PERFORM 2300-I-DISPLAY THRU                                  00086299
+                   2300-F-DISPLAY .                                     00086399
+                                                                        00086469
+       2000-F-PROCESO. EXIT.                                            00086505
+                                                                        00086605
+       2100-I-LECTURA.                                                  00086799
+                                                                        00086899
+            READ ENTRADA INTO WK-TBCLIE                                 00086999
+            EVALUATE WS-FS-ENT                                          00087099
+            WHEN '00'                                                   00087199
+            ADD  1  TO WS-NOV-LEI                                       00087299
+               INITIALIZE WT-REG-CLI                                    00087399
+                                                                        00087499
+               MOVE WK-CLI-TIPO-DOCUMENTO    TO WT-TIPDOC               00087599
+               MOVE WK-CLI-NRO-DOCUMENTO     TO WT-NRODOC               00087699
+               MOVE WK-CLI-NRO-CLIENTE       TO WT-NROCLI               00087799
+               MOVE WK-CLI-NOMBRE-CLIENTE    TO WT-NOMAPE               00087899
+               MOVE WK-CLI-FECCHA-NACIMIENTO TO WT-FECNAC               00087999
+               MOVE WK-CLI-SEXO              TO WT-SEXO                 00088099
+                                                                        00088199
+            WHEN '10'                                                   00088299
+             SET WS-FIN-LECTURA TO TRUE                                 00088399
+            WHEN OTHER                                                  00088499
+             DISPLAY 'ERROR EN LECTURA ARCHIVO FS= ' WS-FS-ENT          00088599
+             SET WS-FIN-LECTURA TO TRUE                                 00088699
+            END-EVALUATE.                                               00088799
+                                                                        00089017
+       2100-F-LECTURA. EXIT.                                            00092499
+                                                                        00093017
+                                                                        00096917
+       2200-I-INSERT.                                                   00097099
+                                                                        00097199
+           EXEC SQL                                                     00097299
+           INSERT INTO ITPLZRY.TB99CLIE(TIPDOC,NRODOC,NROCLI,NOMAPE,    00097399
+             FECNAC,SEXO)                                               00097499
+                 VALUES               (:WT-TIPDOC,                      00097599
+                                       :WT-NRODOC,                      00097699
+                                       :WT-NROCLI,                      00097799
+                                       :WT-NOMAPE,                      00097899
+                                       :WT-FECNAC,                      00097999
+                                       :WT-SEXO)                        00098099
+           END-EXEC.                                                    00098499
+                                                                        00098599
+           EVALUATE TRUE                                                00098699
+             WHEN SQLCODE EQUAL ZEROS                                   00098799
+                ADD 1  TO WS-NOV-GRA                                    00098899
+             WHEN SQLCODE = -803                                        00098999
+                SET WS-FIN-LECTURA     TO TRUE                          00099099
+                DISPLAY 'EL REGISTRO YA EXISTE EN LA TABLA'             00099199
+             WHEN OTHER                                                 00099799
+                ADD 1 TO WS-NOV-ERR                                     00099899
+                MOVE SQLCODE           TO WS-SQLCODE                    00099999
+                DISPLAY 'ERROR EN INSERT   : '   WS-SQLCODE             00100099
+                SET WS-FIN-LECTURA     TO TRUE                          00100199
+           END-EVALUATE.                                                00100299
+                                                                        00100399
+       2200-F-INSERT. EXIT.                                             00101099
+      **************************************                            00109417
+      *                                    *                            00109517
+      *  MOSTRAR SALIDA                    *                            00109699
+      *                                    *                            00109717
+      **************************************                            00109817
+                                                                        00109999
+       2300-I-DISPLAY.                                                  00110099
+                                                                        00110199
+            MOVE WS-NOV-LEI TO WS-DISP                                  00110299
+            DISPLAY 'NOVEDADES LEIDAS   : ' WS-DISP                     00110399
+            MOVE WS-NOV-ERR TO WS-DISP                                  00110499
+            DISPLAY 'NOVEDADES ERRONEAS : ' WS-DISP                     00110599
+            MOVE WS-NOV-GRA TO WS-DISP                                  00110699
+            DISPLAY 'NOVEDADES GRABADAS : ' WS-DISP.                    00110799
+                                                                        00110817
+       2300-F-DISPLAY.   EXIT.                                          00110999
+                                                                        00111117
+      **************************************                            00111217
+      *                                    *                            00111317
+      *  CUERPO FINAL CIERRE DE FILES      *                            00111417
+      *                                    *                            00111517
+      **************************************                            00111617
+                                                                        00111799
+       9999-I-FINAL.                                                    00111817
+                                                                        00111917
+           CLOSE ENTRADA                                                00112099
+              IF WS-FS-ENT  IS NOT EQUAL '00'                           00112199
+                DISPLAY '* ERROR EN CLOSE SALIDA  = '                   00112217
+                                            WS-FS-ENT                   00112399
+             END-IF.                                                    00112417
+                                                                        00112517
+       9999-F-FINAL.                                                    00113217
+           EXIT.                                                        00114017
+      *                                                                 00120017

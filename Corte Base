@@ -1,0 +1,221 @@
+       IDENTIFICATION DIVISION.                                         00010029
+        PROGRAM-ID CORTEBAS.                                            00020099
+      **************************************                            00030029
+      *                                    *                            00040099
+      **************************************                            00050029
+      *  FECHA   *    DETALLE        * COD *                            00060029
+      **************************************                            00070029
+      *          *                   *     *                            00080029
+      * 2/11/22  * CLASE REPASO      *     *                            00090099
+      *          *                   *     *                            00100029
+      **************************************                            00110029
+       ENVIRONMENT DIVISION.                                            00120029
+       CONFIGURATION SECTION.                                           00130029
+       SPECIAL-NAMES.                                                   00140069
+           DECIMAL-POINT IS COMMA.                                      00150070
+                                                                        00160070
+       INPUT-OUTPUT SECTION.                                            00170029
+       FILE-CONTROL.                                                    00180071
+      * DEFINO ENTRADAS  Y  SALIDAS                                     00181099
+           SELECT ENTRADA ASSIGN DDENTRA                                00190034
+           FILE STATUS IS WS-FS-ENT.                                    00200071
+                                                                        00210029
+       DATA DIVISION.                                                   00220029
+       FILE SECTION.                                                    00230029
+       FD ENTRADA                                                       00240029
+             BLOCK CONTAINS 0 RECORDS                                   00250029
+             RECORDING MODE IS F.                                       00260029
+                                                                        00270029
+       01 REG-ENTRADA     PIC X(99).                                    00280099
+                                                                        00290021
+       WORKING-STORAGE SECTION.                                         00310000
+                                                                        00320068
+      *AGREGAR TODAS LAS VARIABLES A USAR                               00330099
+      * ESTO VENDRIA DE LA ESTUCTURA DEL COPY                           00330199
+       77 WS-PALO         PIC     99      VALUE ZEROES.                 00330399
+       77 WS-ROTA         PIC     99      VALUE ZEROES.                 00330499
+       77 WS-REG-ENTRADA  PIC    X(99)    VALUE SPACES.                 00330599
+      * PARA PODER COMPARAR LOS VALORES CON LO NUEVO PARA EL CORTE      00330699
+       77 WS-ROTA-ANT     PIC     99      VALUE ZEROES.                 00330799
+       77 WS-PALO-ANT     PIC     99      VALUE ZEROES.                 00330899
+      *CONTADORES VARIOS                                                00331099
+       77 WS-CONT         PIC     99      VALUE ZEROES.                 00340099
+       77 WS-CONT-ROTA    PIC     99      VALUE ZEROES.                 00341099
+       77 WS-ROTA-TOTAL   PIC     99      VALUE ZEROES.                 00342099
+       77 WS-SANAS        PIC     99      VALUE ZEROES.                 00350099
+       77 WS-CAR-LEIDAS   PIC     99      VALUE ZEROES.                 00360099
+      *FILE STATUS ARCHIVO                                              00361099
+       77 WS-FS-ENT       PIC     XX      VALUE SPACES.                 00370099
+      *FLAG PARA FIN PROGRAMA                                           00630099
+       01 STATUS-FIN-LECTURA   PIC X.                                   00630199
+         88 WS-FIN-LECTURA            VALUE 'T'.                        00630299
+         88 WS-NO-FIN-LECTURA         VALUE 'F'.                        00630399
+                                                                        00631099
+      ****************************************************************  00640099
+       PROCEDURE DIVISION.                                              00650000
+      **************************************                            00660000
+      *                                    *                            00670000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00680000
+      *                                    *                            00690000
+      **************************************                            00700000
+                                                                        00701099
+       MAIN-PROGRAM-INICIO.                                             00710001
+                                                                        00720044
+      *CHEQUEO FS E INICIALIZO LO QUE HAGA FALTA                        00730044
+           PERFORM 1000-I-INICIO  THRU                                  00740001
+                   1000-F-INICIO.                                       00750001
+                                                                        00760044
+      *REALIZO LOS PROCESOS CORRESPONDIENTES                            00770046
+           PERFORM 2000-I-PROCESO  THRU                                 00780001
+                   2000-F-PROCESO UNTIL WS-FIN-LECTURA.                 00790056
+                                                                        00800044
+      *CIERRO LOS ARCHIVOS,CHEQUEO FS,GUARDO REGISTROS.                 00810044
+           PERFORM 9999-I-FINAL    THRU                                 00820001
+                   9999-F-FINAL.                                        00830004
+                                                                        00840001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      00850001
+                                                                        00860001
+       1000-I-INICIO.                                                   00870001
+                                                                        00880050
+           SET WS-NO-FIN-LECTURA      TO TRUE                           00890099
+                                                                        00900050
+           INITIALIZE     WS-CONT                                       00901099
+                          WS-CONT-ROTA                                  00902099
+                          WS-CONT-LEIDAS                                00903099
+                          WS-PALO-ANT                                   00904099
+                          WS-ROTA-ANT                                   00905099
+                                                                        00906099
+      *  CHEQUEO ARCHIVO DE ENTRADA                                     00910025
+                                                                        00920044
+           OPEN INPUT ENTRADA.                                          00930015
+           EVALUATE WS-FS-ENT                                           00940030
+            WHEN 00                                                     00950029
+             CONTINUE                                                   00960059
+            WHEN OTHER                                                  00970035
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-ENT        00980044
+             SET WS-FIN-LECTURA       TO TRUE                           00990099
+           END-EVALUATE.                                                01000030
+                                                                        01010044
+      * LEO EL ARCHIVO DE ENTRADA Y CHEQUEO FS                          01020044
+                                                                        01030044
+           READ ENTRADA INTO WS-REG-ENTRADA                             01040099
+           EVALUATE WS-FS-ENT                                           01050044
+            WHEN 00                                                     01060045
+      *     MANO IZQUIERDA     MANO DERECHA                             01060199
+            MOVE WS-PALO   TO WS-PALO-ANT                               01061099
+            MOVE WS-ROTA   TO WS-ROTA-ANT                               01061199
+            ADD 1 TO WS-CONT                                            01062099
+            ADD 1 TO WS-CONT-ROTA                                       01062199
+            ADD 1 TO WS-CAR-LEIDAS                                      01063099
+      *INICIALIZAR LO QUE HAGA FALTA                                    01070099
+            WHEN 10                                                     01090044
+             DISPLAY 'ARCHIVO ENTRADA VACIO AL INCIO FS: ' WS-FS-ENT    01100044
+             SET WS-FIN-LECTURA       TO TRUE                           01110099
+            WHEN OTHER                                                  01120044
+             DISPLAY 'ARCHIVO ENTRADA ERROR LECTURA FS: ' WS-FS-ENT     01130044
+             SET WS-FIN-LECTURA       TO TRUE                           01140099
+           END-EVALUATE.                                                01150059
+                                                                        01160044
+       1000-F-INICIO.                                                   01170001
+                                                                        01180021
+           EXIT.                                                        01190000
+                                                                        01200021
+      **************************************                            01210000
+      *                                    *                            01220000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            01230000
+      *                                    *                            01240000
+      **************************************                            01250000
+                                                                        01260057
+      ************************************************************      01270089
+       2000-I-PROCESO.                                                  01271099
+                                                                        01271199
+           PERFORM 2100-I-LECTURA  THRU                                 01271299
+                   2100-F-LECTURA.                                      01271399
+                                                                        01271499
+           PERFORM 2300-I-COMPARO  THRU                                 01271599
+                   2300-F-COMPARO.                                      01271699
+                                                                        01271799
+       2000-F-PROCESO. EXIT.                                            01272099
+                                                                        01280089
+       2100-I-LECTURA.                                                  01290099
+                                                                        01300099
+      *GUARDO LOS PRIMEROS VALORES EN EL REGISTRO                       01310099
+           READ ENTRADA INTO WS-REG-ENTRADA                             01320099
+           EVALUATE WS-FS-ENT                                           01330099
+             WHEN '00'                                                  01340099
+      *AGREGO UN CONTADOR A CARTAS LEIDAS                               01341099
+           ADD 1 TO WS-CAR-LEIDAS                                       01350099
+             WHEN '10'                                                  01370099
+               SET WS-FIN-LECTURA     TO TRUE                           01380099
+             WHEN OTHER                                                 01400099
+               DISPLAY 'ERROR EN LECTURA ARCH ENTRADA' WS-FS-ENT        01410099
+               SET WS-FIN-LECTURA     TO  TRUE                          01420099
+           END-EVALUATE.                                                01430099
+                                                                        01440099
+       2100-F-LECTURA. EXIT.                                            01450099
+                                                                        01460099
+       2300-I-COMPARO.                                                  01470099
+      *CORTE MAYOR                                                      01482099
+           IF WS-PALO    EQUAL  WS-PALO-ANT                             01490099
+      *CORTE MENOR                                                      01490199
+      *   SE AGREGA UNO AL CONTADOR TOTAL DE CARTAS DE ESTE CORTE       01490299
+              ADD 1 TO WS-CONT                                          01490399
+              IF WS-ROTA  EQUAL  WS-ROTA-ANT                            01491099
+      *       ADD 1 TO WS-ROTA-TOTAL                                    01491199
+      *   SE AGREGA UNO AL CONTADOR TOTAL DE CARTAS DE ESTE CORTE       01491299
+              ADD 1 TO WS-CONT-ROTA                                     01492099
+             ELSE                                                       01493099
+      *   SE REALIZA EL CORTE MENOR                                     01493199
+                PERFORM 2450-I-CORTE-ROTA THRU                          01494099
+                        2450-F-CORTE-ROTA                               01495099
+             END-IF                                                     01496099
+           ELSE                                                         01540099
+      *   SE REALIZA EL CORTE MENOR                                     01540199
+                PERFORM 2450-I-CORTE-ROTA THRU                          01541099
+                        2450-F-CORTE-ROTA                               01542099
+      *   SE REALIZA EL CORTE MAYOR                                     01543099
+              PERFORM 2350-I-CORTE THRU                                 01550099
+                      2350-F-CORTE                                      01560099
+           END-IF.                                                      01570099
+                                                                        01580099
+       2300-F-COMPARO. EXIT.                                            01630099
+                                                                        01640099
+       2350-I-CORTE.                                                    01720099
+      *CORTE MAYOR, CONTIENE AL OTRO                                    01720199
+           DISPLAY 'PALO TIPO ' WS-PALO-ANT  ' CANTIDAD ' WS-CONT       01720299
+           INITIALIZE WS-CONT                                           01723099
+           MOVE WS-PALO TO WS-PALO-ANT                                  01724099
+           ADD 1        TO WS-CONT.                                     01725099
+                                                                        01726099
+       2350-F-CORTE. EXIT.                                              01940099
+                                                                        01941099
+       2450-I-CORTE-ROTA.                                               01950099
+      *CORTE MENOR                                                      01950199
+           DISPLAY 'ROTA TIPO ' WS-ROTA-ANT  ' CANTIDAD ' WS-CONT-ROTA  01950399
+           MOVE WS-CONT-ROTA TO WS-ROTA-TOTAL                           01950499
+           INITIALIZE WS-CONT-ROTA                                      01950599
+           MOVE WS-ROTA TO WS-ROTA-ANT                                  01950699
+           ADD 1        TO WS-CONT-ROTA.                                01950799
+                                                                        01950899
+       2450-F-CORTE-ROTA. EXIT.                                         01951099
+                                                                        01954099
+       9999-I-FINAL.                                                    02050089
+      *MUESTRO EL ULTIMO REGISTRO CON LOS 2 CORTES,1ERO MENOR DSP MAYOR 02050199
+           DISPLAY 'ROTA TIPO ' WS-ROTA-ANT  ' CANTIDAD ' WS-CONT-ROTA  02051099
+           DISPLAY 'PALO TIPO ' WS-PALO-ANT  ' CANTIDAD ' WS-CONT       02060099
+      *MUESTRO EL TOTAL DE CONTADORES                                   02070099
+           DISPLAY 'CANTIDAD DE CARTAS LEIDOS ' WS-CAR-LEIDAS           02090099
+           DISPLAY 'CANTIDAD DE CARTAS ROTAS ' WS-ROTA-TOTAL            02100099
+           COMPUTE WS-SANAS =  WS-CAR-LEIDAS - WS-ROTA-TOTAL            02110099
+           DISPLAY ' CANTIDAD DE CARTAS SANAS ' WS-SANAS                02120099
+      *CERRAR ARCHIVO ENTRADA                                           02170089
+             CLOSE ENTRADA                                              02180089
+             EVALUATE WS-FS-ENT                                         02190089
+              WHEN 00                                                   02200089
+                 CONTINUE                                               02210089
+              WHEN OTHER                                                02220089
+               DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-ENT      02230089
+               SET WS-FIN-LECTURA TO TRUE                               02240089
+             END-EVALUATE.                                              02250099
+                                                                        02270092
+       9999-F-FINAL. EXIT.                                              02280089

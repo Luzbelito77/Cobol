@@ -1,0 +1,372 @@
+       IDENTIFICATION DIVISION.                                         00010029
+        PROGRAM-ID PGMNOC52.                                            00020099
+      **************************************                            00040029
+      * PROGRAMA DE EXAMEN PERVERSO        *                            00050099
+      **************************************                            00060029
+      *  FECHA   *    DETALLE        * COD *                            00070029
+      **************************************                            00080029
+      *          *                   *     *                            00090029
+      * 04-11-22 * EJERCICIO EXAMEN PERVERSO                            00100099
+      *          *                   *     *                            00110029
+      **************************************                            00120099
+       ENVIRONMENT DIVISION.                                            00130029
+       CONFIGURATION SECTION.                                           00140029
+       SPECIAL-NAMES.                                                   00150069
+           DECIMAL-POINT IS COMMA.                                      00160070
+                                                                        00170070
+       INPUT-OUTPUT SECTION.                                            00180029
+       FILE-CONTROL.                                                    00190071
+                                                                        00191099
+           SELECT ENTRADA ASSIGN DDENTRA                                00200034
+           FILE STATUS IS WS-FS-ENT.                                    00212099
+                                                                        00220029
+           SELECT VSAM    ASSIGN DDVSAM                                 00221099
+                  ORGANIZATION IS INDEXED                               00221199
+                  ACCESS MODE IS RANDOM                                 00221299
+                  RECORD KEY IS  VSAM-KEY                               00221399
+                  FILE STATUS IS WS-FS-VS.                              00222099
+                                                                        00223099
+       DATA DIVISION.                                                   00230029
+       FILE SECTION.                                                    00240029
+                                                                        00241099
+       FD ENTRADA                                                       00250029
+           BLOCK CONTAINS 0 RECORDS                                     00260099
+           RECORDING MODE IS F.                                         00270099
+                                                                        00280029
+       01 REG-ENTRADA     PIC X(160).                                   00290099
+                                                                        00300021
+       FD VSAM.                                                         00310099
+       01 REG-VSAM.                                                     00311099
+         03  VSAM-KEY     PIC X(13).                                    00312099
+         03  FILLER       PIC X(147).                                   00313099
+                                                                        00314099
+       WORKING-STORAGE SECTION.                                         00320000
+                                                                        00330068
+      *ESTRUCTURA ARCHIVO ENTRADA Y SALIDA                              00340099
+                                                                        00341099
+       COPY CPEMPLE.                                                    00350099
+                                                                        00350199
+       COPY CPPERSON.                                                   00350299
+                                                                        00350399
+      *KEYS PARA COMPARAR                                               00350499
+                                                                        00350699
+       01  WS-KEY-2.                                                    00350799
+           03  WS-EMP-TIP    PIC X(02)      VALUE SPACES.               00350899
+           03  WS-EMP-NRO    PIC X(11)      VALUE SPACES.               00350999
+                                                                        00351099
+      *CONTADORES                                                       00360099
+       77 WS-CONT          PIC 999          VALUE ZEROES.               00361099
+       77 WS-CONT2         PIC 999          VALUE ZEROES.               00361299
+       77 WS-CONT-TOT      PIC 9999         VALUE ZEROES.               00361699
+                                                                        00370099
+      *MASCARAS DE EDICION                                              00371099
+       77 WS-DISP-TOT      PIC ZZZ9         VALUE ZEROES.               00371199
+       77 WS-CONT-DISP     PIC ZZ9          VALUE ZEROES.               00371299
+       77 WS-CONTF         PIC ZZ9          VALUE ZEROES.               00371399
+       77 WS-CONTM         PIC ZZ9          VALUE ZEROES.               00371499
+       77 WS-CONTO         PIC ZZ9          VALUE ZEROES.               00371599
+       77 WS-LITERAL-F     PIC X            VALUE 'F'.                  00371699
+       77 WS-LITERAL-M     PIC X            VALUE 'M'.                  00371799
+       77 WS-LITERAL-O     PIC X            VALUE 'O'.                  00371899
+       77 WS-LITERAL-FEM   PIC X(10)        VALUE 'FEMENINO'.           00371999
+       77 WS-LITERAL-MAS   PIC X(10)        VALUE 'MASCULINO'.          00372099
+       77 WS-LITERAL-OTR   PIC X(10)        VALUE 'OTRO'.               00372199
+                                                                        00373099
+      *FILE STATUS ENTRADA Y SALIDA                                     00380075
+       77  WS-FS-ENT       PIC XX           VALUE SPACES.               00390099
+       77  WS-FS-VS        PIC XX           VALUE SPACES.               00400099
+                                                                        00430099
+      *COMPARADORES DE ANTERIOR                                         00440099
+       77  WS-SEX-ANT      PIC X(01)        VALUE SPACES.               00450099
+       77  WS-SUC-ANT      PIC X(15)        VALUE SPACES.               00460099
+       77  WS-SEX-DISP     PIC X(10)        VALUE SPACES.               00461099
+                                                                        00470099
+      *FIN DE LECTURA ARCHIVO                                           00510075
+       01  WS-STATUS-FIN   PIC X.                                       00520044
+           88  WS-FIN-LECTURA               VALUE 'Y'.                  00530099
+           88  WS-NO-FIN-LECTURA            VALUE 'N'.                  00540099
+                                                                        00550044
+       01  WS-STATUS-ERROR PIC X.                                       00551099
+           88  WS-SI-ERROR                  VALUE 'Y'.                  00552099
+           88  WS-NO-ERROR                  VALUE 'N'.                  00553099
+                                                                        00554099
+      ***************************************************************.  00560000
+       PROCEDURE DIVISION.                                              00570000
+      **************************************                            00580000
+      *                                    *                            00590000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00600000
+      *                                    *                            00610000
+      **************************************                            00620000
+       MAIN-PROGRAM-INICIO.                                             00630001
+                                                                        00640044
+      *CHEQUEO FS E INICIALIZO LO QUE HAGA FALTA                        00650044
+                                                                        00660099
+           PERFORM 1000-I-INICIO  THRU                                  00670001
+                   1000-F-INICIO.                                       00680001
+                                                                        00690044
+      *REALIZO LOS PROCESOS CORRESPONDIENTES                            00700046
+                                                                        00710099
+           PERFORM 2000-I-PROCESO  THRU                                 00720001
+                   2000-F-PROCESO UNTIL WS-FIN-LECTURA.                 00730056
+                                                                        00740044
+      *CIERRO LOS ARCHIVOS,CHEQUEO FS,GUARDO REGISTROS.                 00750044
+                                                                        00760099
+           PERFORM 9999-I-FINAL    THRU                                 00770001
+                   9999-F-FINAL.                                        00780004
+                                                                        00790001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      00800001
+                                                                        00810001
+       1000-I-INICIO.                                                   00820001
+                                                                        00830050
+           DISPLAY 'INICIO'                                             00830199
+      *INICIALIZO TODO LO NECESARIO                                     00831099
+                                                                        00832099
+           SET WS-NO-FIN-LECTURA      TO TRUE                           00840099
+           SET WS-SI-ERROR            TO TRUE                           00841099
+           MOVE ZEROES                TO WS-CONT                        00850099
+           MOVE ZEROES                TO WS-CONT2                       00850299
+           MOVE ZEROES                TO WS-CONTM                       00850399
+           MOVE ZEROES                TO WS-CONTF                       00850499
+           MOVE ZEROES                TO WS-CONTO                       00850599
+           MOVE ZEROES                TO WS-CONT-TOT                    00850699
+                                                                        00850799
+                                                                        00851099
+      *  CHEQUEO ARCHIVO DE ENTRADA                                     00860025
+                                                                        00870044
+           OPEN INPUT ENTRADA.                                          00880099
+           EVALUATE WS-FS-ENT                                           00890030
+            WHEN 00                                                     00900029
+             CONTINUE                                                   00910059
+            WHEN OTHER                                                  00920035
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-ENT        00930044
+             SET WS-FIN-LECTURA       TO TRUE                           00940099
+           END-EVALUATE.                                                00950030
+                                                                        00960044
+           OPEN INPUT VSAM.                                             00961099
+           EVALUATE WS-FS-VS                                            00962099
+            WHEN 00                                                     00963099
+             CONTINUE                                                   00964099
+            WHEN OTHER                                                  00965099
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-VS         00966099
+             SET WS-FIN-LECTURA       TO TRUE                           00967099
+           END-EVALUATE.                                                00968099
+                                                                        00969099
+      * LEO EL ARCHIVO DE ENTRADA Y CHEQUEO FS                          00970044
+                                                                        00980044
+           PERFORM 3400-I-LECTURA  THRU                                 00981099
+                   3400-F-LECTURA  UNTIL WS-NO-ERROR.                   00982099
+                                                                        00983099
+      *    READ ENTRADA INTO REG-EMPLEADO                               00990099
+      *    EVALUATE WS-FS-ENT                                           01010099
+      *     WHEN 00                                                     01020099
+      *VALIDO SI ESTE REGISTRO ES CORRECTO                              01020599
+      *       PERFORM 3500-I-VALIDAR THRU                               01021099
+      *               3500-F-VALIDAR                                    01027099
+      *    DISPLAY 'SUCURSAL '  EMP-NRO-SUCURSAL                        01028099
+      *     WHEN 10                                                     01110099
+      *      DISPLAY 'ARCHIVO ENTRADA VACIO AL INCIO FS: ' WS-FS-ENT    01120099
+      *      SET WS-FIN-LECTURA       TO TRUE                           01130099
+      *     WHEN OTHER                                                  01140099
+      *      DISPLAY 'ARCHIVO ENTRADA ERROR LECTURA FS: ' WS-FS-ENT     01150099
+      *      SET WS-FIN-LECTURA       TO TRUE                           01160099
+      *    END-EVALUATE.                                                01170099
+                                                                        01180044
+       1000-F-INICIO.                                                   01190001
+                                                                        01200021
+           EXIT.                                                        01210000
+                                                                        01220021
+      **************************************                            01230000
+      *                                    *                            01240000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            01250000
+      *                                    *                            01260000
+      **************************************                            01270000
+                                                                        01280057
+      ************************************************************      01290089
+                                                                        01300089
+       2000-I-PROCESO.                                                  01310099
+                                                                        01320099
+           DISPLAY 'INICIO PROCESO'                                     01330099
+                                                                        01521199
+      *PROCESO DONDE SE REALIZA EL CORTE Y LA ACUMULACION               01522099
+                                                                        01523099
+           IF WS-SUC-ANT EQUAL EMP-NRO-SUCURSAL                         01524099
+            IF WS-SEX-ANT EQUAL EMP-SEXO                                01525099
+                                                                        01526099
+           DISPLAY 'MENOR '                                             01526199
+             ADD  1                   TO WS-CONT                        01527099
+                                                                        01528099
+            ELSE                                                        01529099
+                                                                        01529199
+      *CAMBIO DEL CORTE MENOR                                           01529299
+                                                                        01529399
+              PERFORM 2350-I-CORTEMENOR THRU                            01529499
+                      2350-F-CORTEMENOR                                 01529599
+            END-IF                                                      01529699
+           ELSE                                                         01529799
+                                                                        01529899
+           DISPLAY 'MAYOR '                                             01529999
+      *CAMBIO DEL CORTE MAYOR SE EJECUTA CORTE MENOR Y DESPUES MAYOR    01530099
+                                                                        01530199
+              PERFORM 2350-I-CORTEMENOR THRU                            01530299
+                      2350-F-CORTEMENOR                                 01530399
+              PERFORM 2450-I-CORTEMAYOR THRU                            01530499
+                      2450-F-CORTEMAYOR                                 01530599
+           END-IF.                                                      01530699
+           EVALUATE WS-FIN-LECTURA                                      01530799
+           WHEN TRUE                                                    01530899
+           CONTINUE                                                     01530999
+           WHEN OTHER                                                   01531099
+           DISPLAY 'LECTURA'                                            01531199
+           PERFORM 3400-I-LECTURA  THRU                                 01531299
+                   3400-F-LECTURA  UNTIL WS-NO-ERROR                    01531399
+           END-EVALUATE                                                 01531599
+           DISPLAY 'FIN PROCESO'                                        01531699
+           .                                                            01531799
+       2000-F-PROCESO. EXIT.                                            01532099
+                                                                        01540099
+       2350-I-CORTEMENOR.                                               01930099
+                                                                        01931099
+           DISPLAY 'CORTE MENOR'                                        01931199
+      *ACA VA EL CORTE MENOR                                            01932099
+                                                                        01934099
+             ADD  WS-CONT  TO WS-CONT2                                  01934199
+           EVALUATE WS-SEX-ANT                                          01935099
+            WHEN WS-LITERAL-F                                           01936099
+             MOVE WS-LITERAL-FEM TO WS-SEX-DISP                         01937099
+             MOVE WS-CONT  TO WS-CONTF                                  01938099
+             DISPLAY ' '                                                01939099
+             DISPLAY WS-SEX-DISP ' = ' WS-CONTF                         01939199
+             DISPLAY ' '                                                01939299
+      *      DISPLAY WS-LITERAL-MAS                                     01939399
+            WHEN WS-LITERAL-M                                           01939499
+             MOVE WS-LITERAL-MAS TO WS-SEX-DISP                         01939599
+             MOVE WS-CONT  TO WS-CONTM                                  01939699
+             DISPLAY ' '                                                01939799
+             DISPLAY WS-SEX-DISP ' = ' WS-CONTM                         01939899
+             DISPLAY ' '                                                01939999
+      *      DISPLAY WS-LITERAL-OTR                                     01940099
+            WHEN WS-LITERAL-O                                           01941099
+             MOVE WS-LITERAL-OTR TO WS-SEX-DISP                         01942099
+             MOVE WS-CONT  TO WS-CONTO                                  01943099
+             DISPLAY ' '                                                01944099
+             DISPLAY WS-SEX-DISP ' = ' WS-CONTO                         01945099
+             DISPLAY ' '                                                01946099
+            END-EVALUATE                                                01949199
+                                                                        01950099
+            MOVE ZEROES TO WS-CONT.                                     01960099
+       2350-F-CORTEMENOR. EXIT.                                         02000099
+                                                                        02000199
+       2450-I-CORTEMAYOR.                                               02000299
+                                                                        02000399
+           DISPLAY 'CORTE MAYOR'                                        02000499
+      *ACA VA EL CORTE MAYOR                                            02000599
+            DISPLAY 'TOTAL GENERAL SUCURSAL ' WS-SUC-ANT ' = ' WS-CONT2 02000699
+            ADD WS-CONT2   TO WS-CONT-TOT                               02000799
+            MOVE EMP-NRO-SUCURSAL  TO WS-SUC-ANT                        02000899
+            MOVE ZEROES    TO WS-CONT2                                  02000999
+                              WS-CONT.                                  02001099
+                                                                        02001199
+       2450-F-CORTEMAYOR. EXIT.                                         02001299
+                                                                        02001399
+       3400-I-LECTURA.                                                  02001499
+                                                                        02001599
+           DISPLAY 'LECTURA'                                            02001699
+           READ ENTRADA INTO REG-EMPLEADO                               02001799
+           EVALUATE WS-FS-ENT                                           02001899
+            WHEN 00                                                     02001999
+      *MUEVO LAS VARIABLES A LA CLAVE PARA COMPARAR                     02002099
+              MOVE EMP-TIP-DOC        TO WS-EMP-TIP                     02002199
+              MOVE EMP-NRO-DOC        TO WS-EMP-NRO                     02002299
+      *VALIDO SI ESTE REGISTRO ES CORRECTO                              02002399
+              PERFORM 3500-I-VALIDAR THRU                               02002499
+                      3500-F-VALIDAR                                    02002599
+            WHEN 10                                                     02002699
+             DISPLAY 'ARCHIVO ENTRADA VACIO AL INCIO FS: ' WS-FS-ENT    02002799
+             SET WS-FIN-LECTURA       TO TRUE                           02002899
+            WHEN OTHER                                                  02002999
+             DISPLAY 'ARCHIVO ENTRADA ERROR LECTURA FS: ' WS-FS-ENT     02003099
+             SET WS-FIN-LECTURA       TO TRUE                           02003199
+           END-EVALUATE.                                                02003299
+                                                                        02003399
+       3400-F-LECTURA. EXIT.                                            02003499
+                                                                        02003599
+       3500-I-VALIDAR.                                                  02003699
+                                                                        02003799
+           DISPLAY '3500--'                                             02003899
+              MOVE EMP-NRO-SUCURSAL   TO WS-SUC-ANT                     02003999
+              MOVE EMP-SEXO           TO WS-SEX-ANT                     02004099
+              MOVE EMP-TIP-DOC        TO WS-EMP-TIP                     02004199
+              MOVE EMP-NRO-DOC        TO WS-EMP-NRO                     02004299
+              MOVE WS-KEY-2           TO VSAM-KEY                       02004399
+           READ VSAM INTO REG-PERSONA                                   02004499
+            KEY IS VSAM-KEY                                             02004599
+             INVALID KEY                                                02004699
+               SET WS-SI-ERROR TO TRUE                                  02004799
+               DISPLAY 'PERSONA NO EXISTENTE : ' VSAM-KEY               02004899
+             NOT INVALID KEY                                            02004999
+               DISPLAY 'PERS CORRECTO'                                  02005099
+               CONTINUE                                                 02005199
+                                                                        02005299
+           IF EMP-SEXO = 'M' OR 'F', OR 'O'                             02005399
+               DISPLAY 'SEXO CORRECTO'                                  02005499
+               SET WS-NO-ERROR TO TRUE                                  02005599
+           ELSE                                                         02005699
+               SET WS-SI-ERROR TO TRUE                                  02005799
+               DISPLAY 'SEXO ERRONEO'                                   02005899
+                                                                        02005999
+           END-IF.                                                      02006099
+                                                                        02006199
+       3500-F-VALIDAR. EXIT.                                            02007099
+                                                                        02010099
+       9999-I-FINAL.                                                    02020089
+                                                                        02030099
+           DISPLAY '9999--'                                             02030199
+             ADD  WS-CONT  TO WS-CONT2                                  02031099
+           EVALUATE WS-SEX-ANT                                          02032099
+            WHEN WS-LITERAL-F                                           02033099
+             MOVE WS-LITERAL-FEM TO WS-SEX-DISP                         02034099
+             MOVE WS-CONT  TO WS-CONTF                                  02035099
+             DISPLAY ' '                                                02036099
+             DISPLAY WS-SEX-DISP ' = ' WS-CONTF                         02037099
+             DISPLAY ' '                                                02038099
+      *      DISPLAY WS-LITERAL-MAS                                     02039099
+            WHEN WS-LITERAL-M                                           02039199
+             MOVE WS-LITERAL-MAS TO WS-SEX-DISP                         02039299
+             MOVE WS-CONT  TO WS-CONTM                                  02039399
+             DISPLAY ' '                                                02039499
+             DISPLAY WS-SEX-DISP ' = ' WS-CONTM                         02039599
+             DISPLAY ' '                                                02039699
+      *      DISPLAY WS-LITERAL-OTR                                     02039799
+            WHEN WS-LITERAL-O                                           02039899
+             MOVE WS-LITERAL-OTR TO WS-SEX-DISP                         02039999
+             MOVE WS-CONT  TO WS-CONTO                                  02040099
+             DISPLAY ' '                                                02041099
+             DISPLAY WS-SEX-DISP ' = ' WS-CONTO                         02042099
+             DISPLAY ' '                                                02043099
+            END-EVALUATE                                                02044099
+                                                                        02049199
+      *ACA VA EL CORTE MAYOR                                            02049299
+            DISPLAY 'TOTAL GENERAL SUCURSAL ' WS-SUC-ANT ' = ' WS-CONT2 02049399
+            ADD WS-CONT2   TO WS-CONT-TOT                               02049499
+            MOVE EMP-NRO-SUCURSAL  TO WS-SUC-ANT                        02049599
+            MOVE ZEROES    TO WS-CONT2                                  02049699
+                              WS-CONT.                                  02049799
+                                                                        02049899
+      *MUESTRO ULTIMO REGISTRO                                          02050099
+           MOVE WS-CONT-TOT          TO WS-DISP-TOT                     02110099
+           DISPLAY 'TOTAL GENERAL DE EMPLEADOS      = ' WS-DISP-TOT     02141099
+           DISPLAY ' ' WS-LITERAL-FEM WS-CONTF                          02142099
+           DISPLAY ' ' WS-LITERAL-MAS WS-CONTM                          02143099
+           DISPLAY ' ' WS-LITERAL-OTR WS-CONTO                          02144099
+      *CERRAR ARCHIVO ENTRADA                                           02150099
+                                                                        02160099
+             CLOSE ENTRADA                                              02170089
+             EVALUATE WS-FS-ENT                                         02180089
+              WHEN 00                                                   02190089
+                 CONTINUE                                               02200089
+              WHEN OTHER                                                02210089
+               DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-ENT      02220089
+               SET WS-FIN-LECTURA      TO TRUE                          02230099
+             END-EVALUATE.                                              02240099
+                                                                        02260092
+       9999-F-FINAL. EXIT.                                              02270089

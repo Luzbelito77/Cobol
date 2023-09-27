@@ -1,0 +1,778 @@
+       CBL TEST                                                         00010099
+       IDENTIFICATION DIVISION.                                         00020029
+        PROGRAM-ID PGMVAC51.                                            00030099  
+      **************************************                            00050029
+      *     VALIDACION DE UN ARCHIVO       *                            00060099
+      *        IMPRESION DEL MISMO         *                            00070099
+      **************************************                            00080029
+      *  FECHA   *    DETALLE              *                            00090099
+      **************************************                            00100029
+      *          *                         *                            00110099
+      * 20-10-22 * COMIENZO EJERCICIO 29   *                            00120099
+      *          *                         *                            00130099
+      * 26-10-22 * FIN EJERCICIO 28        *                            00140099
+      *          *                         *                            00150099
+      **************************************                            00160029
+       ENVIRONMENT DIVISION.                                            00170029
+       CONFIGURATION SECTION.                                           00180029
+       SPECIAL-NAMES.                                                   00190069
+           DECIMAL-POINT IS COMMA.                                      00200070
+                                                                        00210070
+       INPUT-OUTPUT SECTION.                                            00220029
+       FILE-CONTROL.                                                    00230071
+                                                                        00240099
+           SELECT ENTRADA    ASSIGN DDENTRA                             00250099
+           FILE STATUS IS WS-FS-ENT.                                    00260099
+                                                                        00270099
+           SELECT VSAM     ASSIGN DDVSAM                                00280099
+                  ORGANIZATION IS INDEXED                               00290099
+                  ACCESS MODE IS RANDOM                                 00300099
+                  RECORD KEY IS VSAM-KEY                                00310099
+                  FILE STATUS IS WS-FS-VSAM.                            00320099
+                                                                        00330029
+           SELECT SALIDA     ASSIGN DDSALE                              00340099
+                  FILE STATUS IS WS-FS-SAL.                             00350099
+                                                                        00360043
+           SELECT IMPRESION  ASSIGN DDIMPR                              00370099
+                  FILE STATUS IS WS-FS-IMP.                             00380099
+                                                                        00390099
+       DATA DIVISION.                                                   00400029
+       FILE SECTION.                                                    00410029
+                                                                        00420096
+       FD ENTRADA                                                       00430099
+             BLOCK CONTAINS 0 RECORDS                                   00440029
+             RECORDING MODE IS F.                                       00450029
+                                                                        00460029
+       01 REG-ENT         PIC X(82).                                    00470099
+                                                                        00480099
+       FD VSAM.                                                         00490099
+       01 REG-PER.                                                      00500099
+          03 VSAM-KEY  PIC X(13).                                       00510099
+          03 FILLER    PIC X(147).                                      00520099
+                                                                        00530099
+       FD SALIDA                                                        00540099
+             BLOCK CONTAINS 0 RECORDS                                   00550099
+             RECORDING MODE IS F.                                       00560099
+                                                                        00570099
+       01 REG-SAL         PIC X(84).                                    00580099
+                                                                        00590043
+       FD IMPRESION                                                     00600099
+             BLOCK CONTAINS 0 RECORDS                                   00610099
+             RECORDING MODE IS F.                                       00620099
+                                                                        00630099
+       01 REG-IMP         PIC X(132).                                   00640099
+                                                                        00650099
+       WORKING-STORAGE SECTION.                                         00660000
+                                                                        00670099
+      *FILE STATUS ENTRADA Y SALIDA                                     00680099
+       77  WS-FS-ENT               PIC XX        VALUE SPACES.          00690099
+       77  WS-FS-SAL               PIC XX        VALUE SPACES.          00700094
+       77  WS-FS-IMP               PIC XX        VALUE SPACES.          00710099
+       77  WS-FS-VSAM              PIC XX        VALUE SPACES.          00720099
+                                                                        00730099
+      *CONTADORES                                                       00740099
+       77  WS-CONT                 PIC 99        VALUE ZEROES.          00750099
+       77  WS-NOV-LEI              PIC 99        VALUE ZEROES.          00760099
+       77  WS-NOV-ENC              PIC 99        VALUE ZEROES.          00770099
+       77  WS-NOV-ERR              PIC 99        VALUE ZEROES.          00780099
+       77  WS-NOV-GRA              PIC 99        VALUE ZEROES.          00790099
+       77  WS-CUENTA-LINEA         PIC 9(02)     VALUE ZEROS.           00800099
+       77  WS-CUENTA-PAGINA        PIC 9(02)     VALUE 01.              00810099
+       77  WS-PAGINA               PIC 9(02)     VALUE ZEROES.          00820099
+                                                                        00830099
+      *MASCARAS DE EDICION                                              00840099
+       77  WS-DISP                 PIC Z9        VALUE ZEROES.          00850099
+                                                                        00860099
+      *VALIDAR NUMERO DOCUMENTO Y NUMERO DE CUENTA                      00870099
+       01 WS-CUE-VAL.                                                   00880099
+         03 WS-ALU1                PIC 99        VALUE ZEROES.          00890099
+         03 WS-CUE                 PIC 9(13)     VALUE ZEROES.          00900099
+                                                                        00910099
+       01  WS-CLAVE-CLIENTE.                                            00920099
+           03 WS-TIP-DOC           PIC X(2)      VALUE SPACES.          00930099
+           03 WS-NUM-DOC           PIC 9(11)     VALUE ZEROS.           00940099
+                                                                        00950099
+      *FECHAS                                                           00960099
+       01 WS-FECHA.                                                     00970099
+         03 WS-ANIO1               PIC 99        VALUE ZEROES.          00980099
+         03 WS-MES1                PIC 99        VALUE ZEROES.          00990099
+         03 WS-DIA1                PIC 99        VALUE ZEROES.          01000099
+                                                                        01010099
+       01 WS-FECHA-SAL.                                                 01020099
+         03 WS-ANIO-S              PIC 9999      VALUE ZEROES.          01030099
+         03 FILLER                 PIC X         VALUE '-'.             01040099
+         03 WS-MES-S               PIC 99        VALUE ZEROES.          01050099
+         03 FILLER                 PIC X         VALUE '-'.             01060099
+         03 WS-DIA-S               PIC 99        VALUE ZEROES.          01070099
+                                                                        01080099
+       01 WS-FECHA-VAL.                                                 01090099
+         03 WS-ANIO                PIC 9999      VALUE ZEROES.          01100099
+         03 FILLER                 PIC X         VALUE '-'.             01110099
+         03 WS-MES                 PIC 99        VALUE ZEROES.          01120099
+         03 FILLER                 PIC X         VALUE '-'.             01130099
+         03 WS-DIA                 PIC 99        VALUE ZEROES.          01140099
+                                                                        01150099
+      *FIN DE LECTURA PROGRAMA                                          01160099
+       01  WS-STATUS-FIN           PIC X.                               01170094
+           88  WS-FIN-LECTURA                    VALUE 'Y'.             01180094
+           88  WS-NO-FIN-LECTURA                 VALUE 'N'.             01190094
+                                                                        01200099
+      *FIN DE LECTURA NOVEDADES                                         01210099
+       01  WS-STATUS-FIN-ENT       PIC X.                               01220099
+           88  WS-FIN-ENT                        VALUE 'Y'.             01230099
+           88  WS-NO-FIN-ENT                     VALUE 'N'.             01240099
+                                                                        01250096
+      *DETECCION DE ERRORES                                             01260099
+       01  WS-STATUS-ERROR         PIC X.                               01270099
+           88  WS-SI-ERROR                       VALUE 'Y'.             01280099
+           88  WS-NO-ERROR                       VALUE 'N'.             01290099
+                                                                        01300099
+       01  WS-STATUS-FECHA         PIC X.                               01310099
+           88  WS-FECHA-OK                       VALUE 'Y'.             01320099
+           88  WS-FECHA-NO-OK                    VALUE 'N'.             01330099
+                                                                        01340099
+      *ESTRUCTURA ARCHIVO ENTRADA                                       01350099
+       COPY CPNOVED.                                                    01360099
+                                                                        01370099
+       COPY CPPERSON.                                                   01380099
+                                                                        01390099
+      *ESTRUCTURA ARCHIVO SALIDA                                        01400099
+       01  WS-TBCUEN.                                                   01410099
+           10 WS-CUE-SECUENCIA     PIC  9(02)      VALUE ZEROES.        01420099
+           10 WS-CUE-TIPO-NOVEDAD  PIC  X(02)      VALUE SPACES.        01430099
+           10 WS-CUE-TIPO-CUENTA   PIC  X(02)      VALUE SPACES.        01440099
+           10 WS-CUE-NRO-CUENTA    PIC  9(15)      VALUE ZEROES.        01450099
+           10 WS-CUE-MONEDA        PIC  9(02)      VALUE ZEROES.        01460099
+           10 WS-CUE-CBU           PIC  9(11)      VALUE ZEROES.        01470099
+           10 WS-CUE-TIP-DOC       PIC  X(02)      VALUE SPACES.        01480099
+           10 WS-CUE-NRO-DOC       PIC  9(11)      VALUE ZEROES.        01490099
+           10 WS-CUE-SALDO-ACTUAL  PIC S9(15)V9(2) VALUE ZEROES.        01500099
+           10 WS-CUE-FECHA-ACTUAL  PIC  X(10)      VALUE SPACES.        01510099
+           10 WS-CUE-FECHA-ULTIMO-CIERRE PIC X(10) VALUE SPACES.        01520099
+                                                                        01530099
+      *ESTRUCTURA ARCHIVO IMPRESION                                     01540099
+       01  WS-TITULO.                                                   01550099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01560099
+           10 FILLER   PIC  X(25)    VALUE 'NOVEDADES VALIDADAS EL : '. 01570099
+           10 WS-D-T   PIC  Z9       VALUE ZEROES.                      01580099
+           10 FILLER   PIC  X(1)     VALUE '/'.                         01590099
+           10 WS-M-T   PIC  Z9       VALUE ZEROES.                      01600099
+           10 FILLER   PIC  X(1)     VALUE '/'.                         01610099
+           10 WS-A-T   PIC  ZZZ9     VALUE ZEROES.                      01620099
+           10 FILLER   PIC  X(95)    VALUE SPACES.                      01630099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01640099
+                                                                        01650099
+       01  WS-SUBTITULO.                                                01660099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01670099
+           10 FILLER   PIC  X(12)    VALUE 'TIPO NOVEDAD'.              01680099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01690099
+           10 FILLER   PIC  X(14)    VALUE 'TIPO DE CUENTA'.            01700099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01710099
+           10 FILLER   PIC  X(6)     VALUE 'MONEDA'.                    01720099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01730099
+           10 FILLER   PIC  X(14)    VALUE 'TIPO DOCUMENTO'.            01740099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01750099
+           10 FILLER   PIC  X(13)    VALUE 'NRO DOCUMENTO'.             01760099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01770099
+           10 FILLER   PIC  X(15)    VALUE 'NRO CUENTA'.                01780099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01790099
+           10 FILLER   PIC  X(19)    VALUE 'SALDO'.                     01800099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01810099
+           10 FILLER   PIC  X(12)    VALUE 'FECHA ACT '.                01820099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01830099
+           10 FILLER   PIC  X(17)    VALUE 'FECHA ULT CIERRE'.          01840099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01850099
+                                                                        01860099
+      *ESTRUCTURA IMPRESION ERRORES                                     01870099
+       01  WS-ERROR.                                                    01880099
+           10 FILLER      PIC  X(1)       VALUE '|'.                    01890099
+           10 WS-LITERAL  PIC  X(50)      VALUE SPACES.                 01900099
+           10 FILLER      PIC  X(80)      VALUE SPACES.                 01910099
+           10 FILLER      PIC  X(1)       VALUE '|'.                    01920099
+                                                                        01930099
+      *ESTRUCTURA IMPRESION                                             01940099
+       01  WS-IMPRESION.                                                01950099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01960099
+           10 WS-IMP-TIPO-NOVEDAD  PIC X(12)        VALUE SPACES.       01970099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         01980099
+           10 WS-IMP-TIPO-CUENTA   PIC  X(14)       VALUE SPACES.       01990099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         02000099
+           10 WS-IMP-MONEDA        PIC  X(6)        VALUE ZEROES.       02010099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         02020099
+           10 WS-IMP-TIP-DOC       PIC  X(14)       VALUE SPACES.       02030099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         02040099
+           10 WS-IMP-NRO-DOC       PIC  Z(12)9      VALUE ZEROES.       02050099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         02060099
+           10 WS-IMP-NRO-CUENTA    PIC  9(15)       VALUE ZEROES.       02070099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         02080099
+           10 WS-IMP-SALDO-ACTUAL  PIC Z(14)9,9(2)- VALUE ZEROES.       02090099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         02100099
+           10 WS-IMP-FECHA-ACTUAL  PIC  X(12)       VALUE SPACES.       02110099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         02120099
+           10 WS-IMP-FECHA-ULTIMO-CIERRE PIC X(17)  VALUE SPACES.       02130099
+           10 FILLER   PIC  X(1)     VALUE '|'.                         02140099
+                                                                        02150099
+      ***************************************************************.  02160000
+                                                                        02170099
+       PROCEDURE DIVISION.                                              02180000
+      **************************************                            02190000
+      *                                    *                            02200000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            02210000
+      *                                    *                            02220000
+      **************************************                            02230000
+       MAIN-PROGRAM-INICIO.                                             02240001
+                                                                        02250044
+      *CHEQUEO FS E INICIALIZO LO QUE HAGA FALTA                        02260044
+           PERFORM 1000-I-INICIO  THRU                                  02270001
+                   1000-F-INICIO.                                       02280001
+                                                                        02290044
+      *REALIZO LOS PROCESOS CORRESPONDIENTES                            02300046
+           PERFORM 2000-I-PROCESO  THRU                                 02310001
+                   2000-F-PROCESO UNTIL WS-FIN-LECTURA.                 02320056
+                                                                        02330044
+      *CIERRO LOS ARCHIVOS,CHEQUEO FS,GUARDO REGISTROS.                 02340044
+           PERFORM 9999-I-FINAL    THRU                                 02350001
+                   9999-F-FINAL.                                        02360004
+                                                                        02370001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      02380001
+                                                                        02390001
+       1000-I-INICIO.                                                   02400001
+                                                                        02410050
+      *SETEO DE FLAGS PARA PODER COMENZAR                               02420099
+                                                                        02430099
+           SET WS-NO-FIN-ENT     TO TRUE                                02440099
+           SET WS-NO-FIN-LECTURA TO TRUE                                02450099
+           MOVE  62              TO  WS-CUENTA-LINEA                    02460099
+           MOVE ZEROES    TO WS-NOV-LEI                                 02470099
+                             WS-NOV-ENC                                 02480099
+                             WS-NOV-ERR                                 02490099
+                             WS-NOV-GRA                                 02500099
+                                                                        02510096
+      *  CHEQUEO ARCHIVOS DE ENTRADA                                    02520093
+                                                                        02530044
+           OPEN INPUT ENTRADA                                           02540099
+           EVALUATE WS-FS-ENT                                           02550099
+            WHEN 00                                                     02560093
+      *GUARDO EL PRIMER VALOR DE ENTRADA CUANDO EL FS ES CORRECTO       02570099
+              PERFORM 2010-LEER-ENTRADA   THRU                          02580099
+                      2010-LEER-ENTRADA-F                               02590099
+             CONTINUE                                                   02600099
+            WHEN OTHER                                                  02610093
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-ENT        02620099
+             SET WS-FIN-LECTURA  TO TRUE                                02630099
+           END-EVALUATE.                                                02640093
+                                                                        02650099
+           OPEN INPUT VSAM                                              02660099
+           EVALUATE WS-FS-VSAM                                          02670099
+            WHEN 00                                                     02680099
+             CONTINUE                                                   02690099
+            WHEN OTHER                                                  02700099
+             DISPLAY 'ARCHIVO VSAM CORRUPTO, ERROR ' WS-FS-VSAM         02710099
+             SET WS-FIN-LECTURA  TO TRUE                                02720099
+           END-EVALUATE.                                                02730099
+                                                                        02740099
+                                                                        02750099
+                                                                        02760093
+      * CHEQUEO ARCHIVO DE SALIDA                                       02770044
+                                                                        02780044
+           OPEN OUTPUT SALIDA.                                          02790099
+           EVALUATE WS-FS-SAL                                           02800044
+            WHEN 00                                                     02810044
+             CONTINUE                                                   02820044
+            WHEN OTHER                                                  02830044
+             DISPLAY 'ARCHIVO SALIDA CORRUPTO, ERROR ' WS-FS-SAL        02840044
+             SET WS-FIN-LECTURA  TO TRUE                                02850099
+           END-EVALUATE.                                                02860044
+                                                                        02870099
+      * CHEQUEO ARCHIVO DE IMPRESION.                                   02880099
+                                                                        02890099
+           OPEN OUTPUT IMPRESION.                                       02900099
+           EVALUATE WS-FS-IMP                                           02910099
+            WHEN 00                                                     02920099
+             CONTINUE                                                   02930099
+            WHEN OTHER                                                  02940099
+             DISPLAY 'ARCHIVO IMPRESION CORRUPTO, ERROR ' WS-FS-IMP     02950099
+             SET WS-FIN-LECTURA  TO TRUE                                02960099
+           END-EVALUATE.                                                02970099
+                                                                        02980099
+      *INGRESO FECHA ACTUAL A LA VARIABLE                               02990099
+                                                                        03000099
+           ACCEPT WS-FECHA FROM DATE                                    03010099
+           MOVE WS-ANIO1   TO WS-ANIO-S                                 03020099
+           MOVE WS-DIA1    TO WS-DIA-S                                  03030099
+           MOVE WS-MES1    TO WS-MES-S                                  03040099
+           ADD  2000       TO WS-ANIO-S.                                03050099
+                                                                        03060099
+       1000-F-INICIO.                                                   03070001
+                                                                        03080021
+           EXIT.                                                        03090000
+                                                                        03100021
+      **************************************                            03110000
+      *                                    *                            03120000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            03130000
+      *                                    *                            03140000
+      **************************************                            03150000
+                                                                        03160057
+       2000-I-PROCESO.                                                  03170089
+                                                                        03180099
+      *COMIENZO VALIDACION                                              03190099
+                                                                        03200099
+            PERFORM 2020-VALIDAR-1 THRU                                 03210099
+                    2110-VALIDAR-10-F                                   03220099
+                                                                        03230099
+            IF WS-NO-ERROR                                              03240099
+             ADD 1 TO WS-NOV-ENC                                        03250099
+             PERFORM 3000-GRABAR-REG THRU                               03260099
+                     3000-GRABAR-REG-F                                  03270099
+            ELSE                                                        03280099
+             ADD 1 TO WS-NOV-ERR                                        03290099
+             SET WS-NO-ERROR TO TRUE                                    03300099
+            END-IF.                                                     03310099
+                                                                        03320099
+            IF WS-FIN-LECTURA                                           03330099
+             CONTINUE                                                   03340099
+            ELSE                                                        03350099
+            ADD 1 TO WS-NOV-LEI                                         03360099
+             PERFORM 2010-LEER-ENTRADA THRU                             03370099
+                     2010-LEER-ENTRADA-F                                03380099
+            END-IF.                                                     03390099
+                                                                        03400099
+       2000-F-PROCESO. EXIT.                                            03410089
+                                                                        03420089
+      ************************************************************      03430089
+       2010-LEER-ENTRADA.                                               03440099
+      *LEO EL ARCHIVO ENTRADA Y GUARDO DATOS PARA COMPARAR              03450099
+            SET WS-NO-ERROR TO TRUE                                     03460099
+            READ ENTRADA INTO WC-TBCUEN                                 03470099
+            EVALUATE WS-FS-ENT                                          03480099
+            WHEN '00'                                                   03490099
+            MOVE WC-CUE-TIP-DOC TO WS-TIP-DOC                           03500099
+            MOVE WC-CUE-NRO-DOC TO WS-NUM-DOC                           03510099
+            MOVE WS-CLAVE-CLIENTE TO VSAM-KEY                           03520099
+            WHEN '10'                                                   03530099
+             SET WS-FIN-LECTURA TO TRUE                                 03540099
+            WHEN OTHER                                                  03550099
+             DISPLAY 'ERROR EN LECTURA ARCHIVO FS= ' WS-FS-ENT          03560099
+             SET WS-FIN-LECTURA TO TRUE                                 03570099
+            END-EVALUATE.                                               03580099
+                                                                        03590099
+       2010-LEER-ENTRADA-F. EXIT.                                       03600099
+                                                                        03610099
+       2020-VALIDAR-1.                                                  03620099
+                                                                        03630099
+           IF WC-CUE-TIPO-NOVEDAD = 'AL' OR 'BA' OR 'MO'                03640099
+            CONTINUE                                                    03650099
+           ELSE                                                         03660099
+            SET WS-SI-ERROR TO TRUE                                     03670099
+                PERFORM 2500-DISPLAY-ERROR THRU                         03680099
+                        2500-DISPLAY-ERROR-F                            03690099
+                MOVE 'TIPO NOVEDAD ERRONEA' TO WS-LITERAL               03700099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        03710099
+                        2800-IMPRIMIR-ERROR-F                           03720099
+           END-IF.                                                      03730099
+                                                                        03740099
+       2020-VALIDAR-1-F. EXIT.                                          03750099
+                                                                        03760099
+       2030-VALIDAR-2.                                                  03770099
+                                                                        03780099
+           IF WC-CUE-TIPO-CUENTA = 'CC' OR 'CA'                         03790099
+               CONTINUE                                                 03800099
+           ELSE                                                         03810099
+             IF WS-SI-ERROR                                             03820099
+                MOVE 'TIPO DE CUENTA ERRONEA' TO WS-LITERAL             03830099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        03840099
+                        2800-IMPRIMIR-ERROR-F                           03850099
+               CONTINUE                                                 03860099
+             ELSE                                                       03870099
+               SET WS-SI-ERROR TO TRUE                                  03880099
+                PERFORM 2500-DISPLAY-ERROR THRU                         03890099
+                        2500-DISPLAY-ERROR-F                            03900099
+                MOVE 'TIPO DE CUENTA ERRONEA' TO WS-LITERAL             03910099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        03920099
+                        2800-IMPRIMIR-ERROR-F                           03930099
+             END-IF                                                     03940099
+           END-IF.                                                      03950099
+                                                                        03960099
+       2030-VALIDAR-2-F. EXIT.                                          03970099
+                                                                        03980099
+       2040-VALIDAR-3.                                                  03990099
+                                                                        04000099
+           MOVE WC-CUE-NRO-CUENTA TO WS-CUE-VAL                         04010099
+           IF WS-CUE IS NUMERIC                                         04020099
+             IF WS-ALU1 = '51'                                          04030099
+              CONTINUE                                                  04040099
+             ELSE                                                       04050099
+               IF WS-SI-ERROR                                           04060099
+                MOVE 'NRO CLIENTE ERRONEO' TO WS-LITERAL                04070099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        04080099
+                        2800-IMPRIMIR-ERROR-F                           04090099
+               ELSE                                                     04100099
+                SET WS-SI-ERROR TO TRUE                                 04110099
+                PERFORM 2500-DISPLAY-ERROR THRU                         04120099
+                        2500-DISPLAY-ERROR-F                            04130099
+                MOVE 'NRO CLIENTE ERRONEO' TO WS-LITERAL                04140099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        04150099
+                        2800-IMPRIMIR-ERROR-F                           04160099
+               END-IF                                                   04170099
+           END-IF.                                                      04180099
+                                                                        04190099
+       2040-VALIDAR-3-F. EXIT.                                          04200099
+                                                                        04210099
+       2050-VALIDAR-4.                                                  04220099
+                                                                        04230099
+           IF WC-CUE-MONEDA = '80' OR '02'                              04240099
+              CONTINUE                                                  04250099
+           ELSE                                                         04260099
+              IF WS-SI-ERROR                                            04270099
+                MOVE 'NRO CLIENTE ERRONEO' TO WS-LITERAL                04280099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        04290099
+                        2800-IMPRIMIR-ERROR-F                           04300099
+              ELSE                                                      04310099
+                 SET WS-SI-ERROR TO TRUE                                04320099
+                 PERFORM 2500-DISPLAY-ERROR THRU                        04330099
+                         2500-DISPLAY-ERROR-F                           04340099
+                MOVE 'MONEDA ERRONEA' TO WS-LITERAL                     04350099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        04360099
+                        2800-IMPRIMIR-ERROR-F                           04370099
+              END-IF                                                    04380099
+           END-IF.                                                      04390099
+                                                                        04400099
+       2050-VALIDAR-4-F. EXIT.                                          04410099
+                                                                        04420099
+       2060-VALIDAR-5.                                                  04430099
+                                                                        04440099
+           IF WC-CUE-CBU NOT EQUAL ZEROES                               04450099
+            CONTINUE                                                    04460099
+           ELSE                                                         04470099
+              IF WS-SI-ERROR                                            04480099
+                MOVE 'CBU ERRONEO' TO WS-LITERAL                        04490099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        04500099
+                        2800-IMPRIMIR-ERROR-F                           04510099
+              CONTINUE                                                  04520099
+              ELSE                                                      04530099
+                 SET WS-SI-ERROR TO TRUE                                04540099
+                 PERFORM 2500-DISPLAY-ERROR THRU                        04550099
+                         2500-DISPLAY-ERROR-F                           04560099
+                MOVE 'CBU ERRONEO' TO WS-LITERAL                        04570099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        04580099
+                        2800-IMPRIMIR-ERROR-F                           04590099
+              END-IF                                                    04600099
+            CONTINUE                                                    04610099
+           END-IF.                                                      04620099
+                                                                        04630099
+       2060-VALIDAR-5-F. EXIT.                                          04640099
+                                                                        04650099
+       2070-VALIDAR-6.                                                  04660099
+                                                                        04670099
+           IF WC-CUE-TIP-DOC = 'DU' OR 'PA' OR 'PE'                     04680099
+            EVALUATE WC-CUE-TIP-DOC                                     04690099
+            WHEN 'AL'                                                   04700099
+              READ VSAM INTO REG-PERSONA                                04710099
+              KEY IS VSAM-KEY                                           04720099
+               INVALID KEY                                              04730099
+                 CONTINUE                                               04740099
+               NOT INVALID KEY                                          04750099
+                 SET WS-SI-ERROR TO TRUE                                04760099
+                 PERFORM 2500-DISPLAY-ERROR THRU                        04770099
+                         2500-DISPLAY-ERROR-F                           04780099
+                MOVE 'PERSONA EXISTENTE, NO SE DA DE ALTA' TO WS-LITERAL04790099
+                 PERFORM 2800-IMPRIMIR-ERROR THRU                       04800099
+                         2800-IMPRIMIR-ERROR-F                          04810099
+            WHEN OTHER                                                  04820099
+              READ VSAM INTO REG-PERSONA                                04830099
+              KEY IS VSAM-KEY                                           04840099
+                 INVALID KEY                                            04850099
+               SET WS-SI-ERROR TO TRUE                                  04860099
+                 PERFORM 2500-DISPLAY-ERROR THRU                        04870099
+                         2500-DISPLAY-ERROR-F                           04880099
+                 MOVE 'PERSONA NO EXISTENTE' TO WS-LITERAL              04890099
+                 PERFORM 2800-IMPRIMIR-ERROR THRU                       04900099
+                         2800-IMPRIMIR-ERROR-F                          04910099
+               NOT INVALID KEY                                          04920099
+               CONTINUE                                                 04930099
+            END-EVALUATE                                                04940099
+           ELSE                                                         04950099
+            IF WS-SI-ERROR                                              04960099
+            CONTINUE                                                    04970099
+            ELSE                                                        04980099
+             SET WS-SI-ERROR TO TRUE                                    04990099
+             PERFORM 2500-DISPLAY-ERROR THRU                            05000099
+                     2500-DISPLAY-ERROR-F                               05010099
+            END-IF                                                      05020099
+                MOVE 'TIPO DE DOCUMENTO ERRONEO' TO WS-LITERAL          05030099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        05040099
+                        2800-IMPRIMIR-ERROR-F                           05050099
+           END-IF.                                                      05060099
+                                                                        05070099
+       2070-VALIDAR-6-F. EXIT.                                          05080099
+                                                                        05090099
+       2080-VALIDAR-7.                                                  05100099
+                                                                        05110099
+            IF WS-CUE-NRO-DOC IS NUMERIC                                05120099
+              CONTINUE                                                  05130099
+             ELSE                                                       05140099
+               IF WS-SI-ERROR                                           05150099
+                MOVE 'NRO DE DOCUMENTO ERRONEO' TO WS-LITERAL           05160099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        05170099
+                        2800-IMPRIMIR-ERROR-F                           05180099
+               ELSE                                                     05190099
+                SET WS-SI-ERROR TO TRUE                                 05200099
+                PERFORM 2500-DISPLAY-ERROR THRU                         05210099
+                        2500-DISPLAY-ERROR-F                            05220099
+                MOVE 'NRO DE DOCUMENTO ERRONEO' TO WS-LITERAL           05230099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        05240099
+                        2800-IMPRIMIR-ERROR-F                           05250099
+               END-IF                                                   05260099
+            END-IF.                                                     05270099
+                                                                        05280099
+       2080-VALIDAR-7-F. EXIT.                                          05290099
+                                                                        05300099
+       2090-VALIDAR-8.                                                  05310099
+                                                                        05320099
+           IF WC-CUE-SALDO-ACTUAL NUMERIC                               05330099
+             MOVE WC-CUE-SALDO-ACTUAL TO WS-IMP-SALDO-ACTUAL            05340099
+             MOVE WC-CUE-SALDO-ACTUAL TO WS-CUE-SALDO-ACTUAL            05350099
+            CONTINUE                                                    05360099
+           ELSE                                                         05370099
+             CONTINUE                                                   05380099
+            IF WS-SI-ERROR                                              05390099
+                MOVE 'SALDO ERRONEO' TO WS-LITERAL                      05400099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        05410099
+                        2800-IMPRIMIR-ERROR-F                           05420099
+            ELSE                                                        05430099
+             SET WS-SI-ERROR TO TRUE                                    05440099
+                PERFORM 2500-DISPLAY-ERROR THRU                         05450099
+                        2500-DISPLAY-ERROR-F                            05460099
+                MOVE 'SALDO ERRONEO' TO WS-LITERAL                      05470099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        05480099
+                        2800-IMPRIMIR-ERROR-F                           05490099
+            END-IF                                                      05500099
+           END-IF.                                                      05510099
+                                                                        05520099
+       2090-VALIDAR-8-F. EXIT.                                          05530099
+                                                                        05540099
+       2100-VALIDAR-09.                                                 05550099
+                                                                        05560099
+             MOVE WS-ANIO1   TO WS-ANIO-S                               05570099
+             MOVE WS-DIA1    TO WS-DIA-S                                05580099
+             MOVE WS-MES1    TO WS-MES-S                                05590099
+             ADD  2000       TO WS-ANIO-S                               05600099
+           IF WS-SI-ERROR                                               05610099
+           CONTINUE                                                     05620099
+           ELSE                                                         05630099
+             MOVE WS-FECHA-SAL TO WS-CUE-FECHA-ACTUAL                   05640099
+           END-IF.                                                      05650099
+                                                                        05660099
+       2100-VALIDAR-09-F. EXIT.                                         05670099
+                                                                        05680099
+       2110-VALIDAR-10.                                                 05690099
+                                                                        05700099
+           MOVE WC-CUE-FECHA-ULTIMO-CIERRE TO WS-FECHA-VAL              05710099
+           PERFORM 2200-VALIDAR-FECHA  THRU                             05720099
+                   2200-VALIDAR-FECHA-F                                 05730099
+           IF WS-FECHA-OK                                               05740099
+            CONTINUE                                                    05750099
+           ELSE                                                         05760099
+            IF WS-SI-ERROR                                              05770099
+                MOVE 'FECHA ULTIMO CIERRE ERRONEA' TO WS-LITERAL        05780099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        05790099
+                        2800-IMPRIMIR-ERROR-F                           05800099
+            ELSE                                                        05810099
+             SET WS-SI-ERROR TO TRUE                                    05820099
+                PERFORM 2500-DISPLAY-ERROR THRU                         05830099
+                        2500-DISPLAY-ERROR-F                            05840099
+                MOVE 'FECHA ULTIMO CIERRE ERRONEA' TO WS-LITERAL        05850099
+                PERFORM 2800-IMPRIMIR-ERROR THRU                        05860099
+                        2800-IMPRIMIR-ERROR-F                           05870099
+            END-IF                                                      05880099
+           END-IF.                                                      05890099
+                                                                        05900099
+       2110-VALIDAR-10-F. EXIT.                                         05910099
+                                                                        05920099
+       2200-VALIDAR-FECHA.                                              05930099
+                                                                        05940099
+           SET WS-FECHA-NO-OK TO TRUE                                   05950099
+                                                                        05960099
+           IF WS-ANIO < '2023' AND WS-ANIO > '1900'                     05970099
+             IF WS-MES = '04' OR '06' OR '09' OR '11'                   05980099
+               IF WS-DIA < '31'                                         05990099
+                SET WS-FECHA-OK TO TRUE                                 06000099
+               ELSE                                                     06010099
+                CONTINUE                                                06020099
+               END-IF                                                   06030099
+             ELSE                                                       06040099
+              IF WS-MES = '02'                                          06050099
+               IF WS-DIA < '29'                                         06060099
+                SET WS-FECHA-OK TO TRUE                                 06070099
+               ELSE                                                     06080099
+                CONTINUE                                                06090099
+              ELSE                                                      06100099
+               IF WS-DIA < '32'                                         06110099
+                SET WS-FECHA-OK TO TRUE                                 06120099
+               ELSE                                                     06130099
+               CONTINUE                                                 06140099
+               END-IF                                                   06150099
+             END-IF                                                     06160099
+           ELSE                                                         06170099
+            CONTINUE                                                    06180099
+           END-IF.                                                      06190099
+                                                                        06200099
+       2200-VALIDAR-FECHA-F. EXIT.                                      06210099
+                                                                        06220099
+       2500-DISPLAY-ERROR.                                              06230099
+                                                                        06240099
+           IF WS-CUENTA-LINEA GREATER 60                                06250099
+               PERFORM 6500-IMPRIMIR-TITULOS THRU                       06260099
+                     F-6500-IMPRIMIR-TITULOS                            06270099
+               PERFORM 3500-IMPRESION THRU                              06280099
+                       3500-IMPRESION-F                                 06290099
+           ELSE                                                         06300099
+                                                                        06310099
+               PERFORM 3500-IMPRESION THRU                              06320099
+                       3500-IMPRESION-F                                 06330099
+                                                                        06340099
+           END-IF.                                                      06350099
+                                                                        06360099
+       2500-DISPLAY-ERROR-F. EXIT.                                      06370099
+                                                                        06380099
+       2800-IMPRIMIR-ERROR.                                             06390099
+                                                                        06400099
+           IF WS-CUENTA-LINEA GREATER 60                                06410099
+               PERFORM 6500-IMPRIMIR-TITULOS THRU                       06420099
+                     F-6500-IMPRIMIR-TITULOS                            06430099
+           END-IF.                                                      06440099
+                                                                        06450099
+             WRITE REG-IMP FROM WS-ERROR                                06460099
+              IF WS-FS-IMP IS NOT EQUAL '00'                            06470099
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-IMP       06480099
+             END-IF.                                                    06490099
+                                                                        06500099
+       2800-IMPRIMIR-ERROR-F. EXIT.                                     06510099
+                                                                        06520099
+       3000-GRABAR-REG.                                                 06530099
+      *GRABO REGISTROS                                                  06540099
+      *ESTA PARTE LA HAGO ASI PORQUE LOS REGISTROS DE SALIDA Y ENTRADA  06550099
+      *NO COINCIDEN, EN EL MEDIO DEL DE SALIDA HAY UN CONTADOR          06560099
+             MOVE WC-CUE-TIPO-NOVEDAD      TO WS-CUE-TIPO-NOVEDAD       06570099
+             MOVE WC-CUE-TIPO-CUENTA       TO WS-CUE-TIPO-CUENTA        06580099
+             MOVE WC-CUE-NRO-CUENTA        TO WS-CUE-NRO-CUENTA         06590099
+             MOVE WC-CUE-MONEDA            TO WS-CUE-MONEDA             06600099
+             MOVE WC-CUE-CBU               TO WS-CUE-CBU                06610099
+             MOVE WC-CUE-TIP-DOC           TO WS-CUE-TIP-DOC            06620099
+             MOVE WC-CUE-NRO-DOC           TO WS-CUE-NRO-DOC            06630099
+             MOVE WC-CUE-SALDO-ACTUAL      TO WS-CUE-SALDO-ACTUAL       06640099
+             MOVE WS-FECHA-SAL             TO WS-CUE-FECHA-ACTUAL       06650099
+             MOVE WC-CUE-FECHA-ULTIMO-CIERRE                            06660099
+                           TO WS-CUE-FECHA-ULTIMO-CIERRE                06670099
+             ADD 1 TO WS-CONT                                           06680099
+             MOVE WS-CONT TO WS-CUE-SECUENCIA                           06690099
+             MOVE ZEROES TO WS-FECHA-VAL                                06700099
+                                                                        06710099
+             WRITE REG-SAL FROM WS-TBCUEN                               06720099
+                                                                        06730099
+             IF WS-FS-SAL IS NOT EQUAL '00'                             06740099
+                DISPLAY '* ERROR EN WRITE SALIDA = ' WS-FS-SAL          06750099
+                SET WS-FIN-LECTURA TO TRUE                              06760099
+             ELSE                                                       06770099
+                ADD 1 TO WS-NOV-GRA                                     06780099
+             END-IF.                                                    06790099
+                                                                        06800099
+                                                                        06810099
+       3000-GRABAR-REG-F. EXIT.                                         06820099
+      ***************************************************               06830099
+       3500-IMPRESION.                                                  06840099
+                                                                        06850099
+             MOVE WC-CUE-TIPO-NOVEDAD      TO WS-IMP-TIPO-NOVEDAD       06860099
+             MOVE WC-CUE-TIPO-CUENTA       TO WS-IMP-TIPO-CUENTA        06870099
+             MOVE WC-CUE-NRO-CUENTA        TO WS-IMP-NRO-CUENTA         06880099
+             MOVE WC-CUE-MONEDA            TO WS-IMP-MONEDA             06890099
+             MOVE WC-CUE-TIP-DOC           TO WS-IMP-TIP-DOC            06900099
+             MOVE WC-CUE-NRO-DOC           TO WS-IMP-NRO-DOC            06910099
+             MOVE WS-FECHA-SAL             TO WS-IMP-FECHA-ACTUAL       06920099
+             MOVE WC-CUE-FECHA-ULTIMO-CIERRE                            06930099
+                           TO WS-IMP-FECHA-ULTIMO-CIERRE                06940099
+              WRITE REG-IMP      FROM WS-IMPRESION AFTER 1              06950099
+              IF WS-FS-IMP IS NOT EQUAL '00'                            06960099
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-IMP       06970099
+                SET WS-FIN-LECTURA TO TRUE                              06980099
+              END-IF.                                                   06990099
+             ADD 1 TO WS-CUENTA-LINEA                                   07000099
+             INITIALIZE WS-IMPRESION.                                   07010099
+                                                                        07020099
+       3500-IMPRESION-F. EXIT.                                          07030099
+                                                                        07040099
+       6500-IMPRIMIR-TITULOS.                                           07050099
+                                                                        07060099
+             MOVE WS-CUENTA-PAGINA    TO WS-PAGINA.                     07070099
+             MOVE 1   TO WS-CUENTA-LINEA.                               07080099
+             ADD  1   TO WS-CUENTA-PAGINA.                              07090099
+             MOVE WS-DIA-S  TO WS-D-T                                   07100099
+             MOVE WS-MES-S  TO WS-M-T                                   07110099
+             MOVE WS-ANIO-S TO WS-A-T                                   07120099
+             WRITE REG-IMP FROM WS-TITULO                               07130099
+              IF WS-FS-IMP IS NOT EQUAL '00'                            07140099
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-IMP       07150099
+             END-IF.                                                    07160099
+             WRITE REG-IMP  FROM WS-SUBTITULO AFTER 1                   07170099
+              IF WS-FS-IMP IS NOT EQUAL '00'                            07180099
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-IMP       07190099
+             END-IF.                                                    07200099
+                                                                        07210099
+       F-6500-IMPRIMIR-TITULOS. EXIT.                                   07220099
+                                                                        07230099
+      ********************************************************          07240089
+                                                                        07250089
+       9999-I-FINAL.                                                    07260089
+                                                                        07270099
+      *MUESTRO TOTALES PEDIDOS                                          07280099
+            MOVE WS-NOV-LEI TO WS-DISP                                  07290099
+            DISPLAY 'TOTAL DE NOVEDADES LEIDAS      : ' WS-DISP         07300099
+            MOVE WS-NOV-ENC TO WS-DISP                                  07310099
+            DISPLAY 'TOTAL DE NOVEDADES ENCONTRADAS : ' WS-DISP         07320099
+            MOVE WS-NOV-ERR TO WS-DISP                                  07330099
+            DISPLAY 'TOTAL DE NOVEDADES ERRONEAS    : ' WS-DISP         07340099
+            MOVE WS-NOV-GRA TO WS-DISP                                  07350099
+            DISPLAY 'TOTAL DE NOVEDADES GRABADAS    : ' WS-DISP         07360099
+                                                                        07370099
+      *CIERRO LOS ARCHIVOS DE ENTRADA Y SALIDA                          07380091
+                                                                        07390099
+      *CERRAR ARCHIVOS ENTRADA                                          07400098
+             CLOSE ENTRADA                                              07410099
+             EVALUATE WS-FS-ENT                                         07420099
+              WHEN 00                                                   07430089
+                 CONTINUE                                               07440089
+              WHEN OTHER                                                07450089
+               DISPLAY 'ARCHIVO CLIENTE CORRUPTO,ERROR ' WS-FS-ENT      07460099
+               SET WS-FIN-LECTURA TO TRUE                               07470089
+             END-EVALUATE                                               07480094
+                                                                        07490094
+             CLOSE VSAM                                                 07500099
+             EVALUATE WS-FS-VSAM                                        07510099
+              WHEN 00                                                   07520099
+                 CONTINUE                                               07530099
+              WHEN OTHER                                                07540099
+               DISPLAY 'ARCHIVO VSAM CORRUPTO,ERROR ' WS-FS-VSAM        07550099
+               SET WS-FIN-LECTURA TO TRUE                               07560099
+             END-EVALUATE                                               07570099
+                                                                        07580099
+                                                                        07590089
+      *CERRAR ARCHIVO SALIDA                                            07600089
+             CLOSE SALIDA                                               07610089
+             EVALUATE WS-FS-SAL                                         07620089
+              WHEN 00                                                   07630089
+                 CONTINUE                                               07640089
+              WHEN OTHER                                                07650089
+               DISPLAY 'ARCHIVO SALIDA CORRUPTO,ERROR ' WS-FS-SAL       07660089
+               SET WS-FIN-LECTURA TO TRUE                               07670089
+             END-EVALUATE.                                              07680099
+                                                                        07690089
+             CLOSE IMPRESION                                            07700099
+             EVALUATE WS-FS-IMP                                         07710099
+              WHEN 00                                                   07720099
+                 CONTINUE                                               07730099
+              WHEN OTHER                                                07740099
+               DISPLAY 'ARCHIVO IMPRESION CORRUPTO,ERROR ' WS-FS-IMP    07750099
+               SET WS-FIN-LECTURA TO TRUE                               07760099
+             END-EVALUATE.                                              07770099
+                                                                        07780099
+       9999-F-FINAL. EXIT.                                              07790089

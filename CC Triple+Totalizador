@@ -1,0 +1,409 @@
+       CBL TEST                                                         00010006
+       IDENTIFICATION DIVISION.                                         00010101
+       PROGRAM-ID PGMEJE51.                                             00011057
+      ******************************************************************00012023
+      *                                                                *00013023
+      *  PROGRAMA CORTE DE CONTROL POR NRO SUCURSAL,TIPO DE CTA Y SEXO *00014057
+      *  CON TOTALES DE SALDOS                                         *00016051
+      *                                                                *00016151
+      ******************************************************************00017023
+                                                                        00020006
+       ENVIRONMENT DIVISION.                                            00020206
+       CONFIGURATION SECTION.                                           00020306
+       SPECIAL-NAMES.                                                   00020406
+           DECIMAL-POINT IS COMMA.                                      00020506
+                                                                        00020606
+       INPUT-OUTPUT SECTION.                                            00020706
+       FILE-CONTROL.                                                    00020806
+                                                                        00020906
+             SELECT SUCURSAL ASSIGN DDENTRA                             00021043
+                    FILE STATUS IS WS-SUC-CODE.                         00021131
+                                                                        00021206
+             SELECT PRINT    ASSIGN DDPRINT                             00021340
+                    FILE STATUS IS WS-PRINT-CODE.                       00021431
+                                                                        00021523
+       DATA DIVISION.                                                   00021606
+       FILE SECTION.                                                    00021706
+       FD SUCURSAL                                                      00021823
+             BLOCK CONTAINS 0 RECORDS                                   00021906
+             RECORDING MODE IS F.                                       00022006
+                                                                        00022106
+       01 REG-SUCURSAL     PIC X(93).                                   00022223
+                                                                        00022306
+       FD PRINT                                                         00022423
+             BLOCK CONTAINS 0 RECORDS                                   00022523
+             RECORDING MODE IS F.                                       00022623
+                                                                        00022723
+       01 REG-PRINT     PIC X(132).                                     00022834
+                                                                        00022923
+      ******************************************************************00023023
+       WORKING-STORAGE SECTION.                                         00023123
+      ******************************************************************00023223
+       77  FILLER          PIC X(26) VALUE '* INICIO WORKING-STORAGE *'.00023323
+       77  FILLER          PIC X(26) VALUE '* CODIGOS RETORNO FILES  *'.00023523
+       77  WS-SUC-CODE     PIC XX    VALUE SPACES.                      00023623
+       77  WS-PRINT-CODE   PIC XX    VALUE SPACES.                      00023723
+                                                                        00023906
+       01  WS-STATUS-FIN    PIC X.                                      00024024
+          88  WS-FIN-LECTURA         VALUE 'Y'.                         00024123
+          88  WS-NO-FIN-LECTURA      VALUE 'N'.                         00024223
+                                                                        00024309
+                                                                        00042706
+      * COPY ESTRUCTURA REGISTRO DE ENTRADA                             00042806
+       01  WS-REG-ENTRADA.                                              00042906
+           COPY CPSUCUR.                                                00043006
+                                                                        00044006
+      * COPY ESTRUCTURA REGISTRO DE SALIDA                              00044123
+           COPY CPLISTA.                                                00044323
+                                                                        00045000
+      *  DEFINICION LINEA DE TOTALES                                   *00045348
+        01 WS-REG-TOTAL.                                                00047052
+           03  WS-LIT-SUC        PIC X(10) VALUE 'SUCURSAL '.           00047153
+           03  WS-TOT-NRO        PIC ZZ9   VALUE ZEROS.                 00048052
+           03  WS-LIT-CUENTA     PIC X(20) VALUE ' TIPO CUENTA/MONEDA'. 00049053
+           03  WS-TOT-CUENTA     PIC X(4) VALUE SPACES.                 00050053
+           03  WS-LIT-SALDOS     PIC X(16) VALUE 'TOT.SALDOS--->'.      00050352
+           03  WS-TOT-SALDO      PIC -Z.ZZZ.ZZ9,99     VALUE ZEROS.     00050452
+           03  FILLER            PIC X(66)           VALUE SPACES.      00050553
+                                                                        00050651
+                                                                        00051051
+       01  WT-REG-TIPO.                                                 00051151
+           03  FILLER              PIC X(10) VALUE 'TIPO CTA.'.         00051253
+           03  WT-TOT-NRO          PIC Z99   VALUE ZEROS.               00051353
+           03  WT-LIT-TIP          PIC X(16) VALUE SPACES.              00051453
+           03  WT-LIT-CUENTA       PIC X(7) VALUE 'TOTAL'.              00051553
+           03  WT-TOT-TIPO         PIC ZZ9  VALUE ZEROS.                00051652
+           03  WT-LIT-SALDOS       PIC X(16) VALUE '  TOT.SALDOS--->'.  00051753
+           03  WT-TOT-SALDO        PIC -ZZZZ.ZZ9,99     VALUE ZEROS.    00051851
+           03  FILLER              PIC X(77)           VALUE SPACES.    00051953
+                                                                        00052041
+       01  WG-REG-SEX.                                                  00052159
+           03 FILLER              PIC X(12) VALUE 'GENERO :  '.         00052359
+           03 WG-LIT-TIPO         PIC X(17) VALUE SPACES.               00052459
+           03 FILLER              PIC X     VALUE SPACES.               00052559
+           03 WG-LIT-TOTAL        PIC X(9)  VALUE 'TOTAL: '.            00052659
+           03 WG-TOTAL-SEX        PIC Z9(2) VALUE ZEROS.                00052759
+           03 FILLER              PIC X(19) VALUE 'TOTAL SALDO SEX: '.  00052859
+           03 WG-TOT-SALDO-SEX    PIC -ZZZZ.ZZ9,99 VALUE ZEROS.         00052959
+                                                                        00053858
+      ********  TOTAL CTAS X SUCURSAL Y TIPO ******                     00053951
+       77  WG-CONT              PIC 9(2)            VALUE ZEROS.        00054059
+       77  WS-SUCURSAL-ANT      PIC 9(2)            VALUE     ZEROS.    00054149
+       77  WT-TIP-ANT           PIC 9(2)            VALUE     ZEROS.    00054253
+       77  WG-SEX-ANT           PIC X               VALUE SPACES.       00054359
+       77  WS-CANT-CTAS-SUC     PIC 9(3)            VALUE     ZEROS.    00054449
+       77  WT-CANT-TIPO-SUC     PIC 9(3)            VALUE     ZEROS.    00054553
+       77  WG-CANT-SEXO-SUC     PIC 9(3)            VALUE     ZEROS.    00054655
+       77  WS-TOT-SAL-SUC       PIC S9(9)V99 COMP-3 VALUE ZEROS.        00054751
+       77  WT-TOT-SAL-TIP       PIC S9(9)V99 COMP-3 VALUE ZEROS.        00054853
+       77  WG-TOT-SAL-SEX       PIC S9(9)V99 COMP-3 VALUE ZEROS.        00054955
+                                                                        00055027
+      ********  TOTAL CTAS X BANCO    ******                            00055124
+       77  WS-CANT-CTAS-BCO     PIC 9(4)            VALUE     ZEROS.    00055249
+       77  WS-TOT-SAL-BCO       PIC S9(7)V99 COMP-3 VALUE     ZEROS.    00055349
+                                                                        00055427
+       77  FILLER        PIC X(26) VALUE '* FINAL  WORKING-STORAGE *'.  00055524
+                                                                        00055624
+       PROCEDURE DIVISION.                                              00055732
+      ****************************************************************  00055832
+      *                                                                *00055924
+      *  CUERPO PRINCIPAL DEL PROGRAMA                                 *00056024
+      *                                                                *00056124
+      ******************************************************************00057024
+       MAIN-PROGRAM-INICIO.                                             00060001
+                                                                        00060100
+           PERFORM 1000-I-INICIO  THRU                                  00060201
+                   1000-F-INICIO.                                       00060301
+                                                                        00060401
+           PERFORM 2000-I-PROCESO  THRU                                 00060501
+                   2000-F-PROCESO  UNTIL WS-FIN-LECTURA.                00060650
+                                                                        00060824
+           PERFORM 9999-I-CIERRE THRU                                   00061237
+                   9999-F-CIERRE.                                       00061337
+                                                                        00061401
+       MAIN-PROGRAM-FINAL.                                              00061548
+           EXIT.                                                        00061648
+                                                                        00061748
+           GOBACK.                                                      00061848
+                                                                        00061948
+      ******************************************************************00062024
+      *                                                                *00062124
+      *  CUERPO INICIO APERTURA ARCHIVOS                               *00062224
+      *                                                                *00062324
+      ******************************************************************00062424
+       1000-I-INICIO.                                                   00062501
+                                                                        00066109
+           SET WS-NO-FIN-LECTURA TO TRUE.                               00066234
+                                                                        00066324
+           OPEN INPUT  SUCURSAL.                                        00066434
+           IF WS-SUC-CODE IS NOT EQUAL '00'                             00066534
+              DISPLAY '* ERROR EN OPEN SUCURSAL = ' WS-SUC-CODE         00066634
+              SET  WS-FIN-LECTURA TO TRUE                               00066834
+           END-IF.                                                      00066948
+                                                                        00067024
+           OPEN OUTPUT PRINT.                                           00067134
+           IF WS-PRINT-CODE IS NOT EQUAL '00'                           00067234
+              DISPLAY '* ERROR EN OPEN PRINT  = ' WS-PRINT-CODE         00067334
+              SET  WS-FIN-LECTURA TO TRUE                               00067534
+           END-IF.                                                      00067634
+                                                                        00067824
+      ******************************************************************00067924
+      *  PRIMER LECTURA PARA CORTE CONTROL POR NRO SUCURSAL            *00068024
+      ******************************************************************00068124
+                                                                        00068224
+           READ SUCURSAL INTO WS-REG-SUCURSAL                           00068334
+                                                                        00068424
+           EVALUATE WS-SUC-CODE                                         00071648
+                                                                        00071724
+             WHEN '00'                                                  00071848
+                  PERFORM 3000-MOVER-Y-GRABAR-SALIDA THRU               00074948
+                          F-3000-MOVER-Y-GRABAR-SALIDA                  00075048
+             WHEN '10'                                                  00075148
+                  DISPLAY '* ARCHIVO SUCURSAL VACIO   ' WS-SUC-CODE     00075248
+                  SET WS-FIN-LECTURA TO TRUE                            00075448
+                                                                        00075524
+             WHEN OTHER                                                 00076048
+                  DISPLAY '* ERROR EN LECTURA SUCURSAL = ' WS-SUC-CODE  00076148
+                  SET WS-FIN-LECTURA TO TRUE                            00078048
+                                                                        00078124
+           END-EVALUATE.                                                00079048
+                                                                        00080024
+       1000-F-INICIO.                                                   00086001
+           EXIT.                                                        00086100
+                                                                        00086228
+      ******************************************************************00086328
+      *                                                                *00087928
+      *  CUERPO PRINCIPAL DE PROCESOS                                  *00101328
+      *  LECTURA FILE INPUT CLASIFICADO                                *00106028
+      *  GRABACION SALIDA CON LOS CAMPOS                               *00109028
+      * DE LAY-OUT GENERAL                                             *00110028
+      *                                                                *00120028
+      ******************************************************************00130028
+       2000-I-PROCESO.                                                  00165033
+                                                                        00165128
+           READ SUCURSAL INTO WS-REG-SUCURSAL                           00165234
+                     AT END SET WS-FIN-LECTURA TO TRUE.                 00165328
+                                                                        00165428
+           EVALUATE WS-SUC-CODE                                         00165534
+                                                                        00165628
+              WHEN '00'                                                 00165748
+                   PERFORM 2200-SEGUIR-PROCESO                          00165848
+                           THRU F-2200-SEGUIR-PROCESO                   00165948
+              WHEN '10'                                                 00166048
+                   SET WS-FIN-LECTURA TO TRUE                           00166148
+              WHEN OTHER                                                00166248
+                   DISPLAY '* ERROR EN LECTURA SUCURSAL = ' WS-SUC-CODE 00166348
+                   SET WS-FIN-LECTURA TO TRUE                           00166548
+                                                                        00166628
+           END-EVALUATE.                                                00166734
+                                                                        00166828
+       2000-F-PROCESO.                                                  00166948
+           EXIT.                                                        00167048
+                                                                        00167128
+      *  TRATAMIENTO ULTIMO CORTE Y TOTALES FINALES                     00167248
+                                                                        00167348
+                                                                        00169942
+       2200-SEGUIR-PROCESO.                                             00170042
+                                                                        00170128
+           IF WS-SUC-NRO  = WS-SUCURSAL-ANT                             00170355
+              IF WS-SUC-TIP = WT-TIP-ANT                                00170454
+               IF WS-SUC-SEXO = WG-SEX-ANT                              00170561
+                 CONTINUE                                               00170651
+               ELSE                                                     00170755
+                PERFORM 2100-CORTE-SEXO THRU                            00170861
+                      F-2100-CORTE-SEXO                                 00170961
+               END-IF                                                   00171055
+              ELSE                                                      00171151
+               PERFORM 2100-CORTE-SEXO THRU                             00171261
+                     F-2100-CORTE-SEXO                                  00171361
+               PERFORM 2220-CORTE-TIPO THRU                             00171451
+                     F-2220-CORTE-TIPO                                  00171551
+              END-IF                                                    00171651
+           ELSE                                                         00171755
+               PERFORM 2100-CORTE-SEXO THRU                             00171863
+                     F-2100-CORTE-SEXO                                  00171963
+               PERFORM 2220-CORTE-TIPO THRU                             00172051
+                     F-2220-CORTE-TIPO                                  00172152
+               PERFORM 2230-CORTE-SUCURSAL THRU                         00172251
+                     F-2230-CORTE-SUCURSAL                              00172351
+           END-IF                                                       00172455
+                                                                        00172548
+            PERFORM 3000-MOVER-Y-GRABAR-SALIDA THRU                     00172655
+                  F-3000-MOVER-Y-GRABAR-SALIDA.                         00172755
+                                                                        00172828
+        F-2200-SEGUIR-PROCESO.                                          00172948
+           EXIT.                                                        00173048
+      ******************************************************************00173151
+      *                                                                *00173251
+      *  PARRAFO QUE CONTROLA EL CORTE DE TIPO DE CUENTA               *00173351
+      *                                                                *00173451
+      ******************************************************************00173551
+       2100-CORTE-SEXO.                                                 00173755
+                                                                        00173855
+           MOVE SPACES             TO    WS-REG-LISTA.                  00173955
+           MOVE WG-CANT-SEXO-SUC   TO    WG-TOTAL-SEX.                  00174160
+           MOVE WG-TOT-SAL-SEX     TO    WG-TOT-SALDO-SEX.              00174260
+           EVALUATE WS-SUC-SEXO                                         00174360
+            WHEN 'M'                                                    00174464
+              MOVE 'SEXO MASCULINO' TO WG-LIT-TIPO                      00174560
+            WHEN 'F'                                                    00174764
+              MOVE 'SEXO FEMENINO' TO WG-LIT-TIPO                       00174860
+            WHEN 'O'                                                    00174964
+              MOVE 'SEXO OTRO' TO WG-LIT-TIPO                           00175060
+            WHEN OTHER                                                  00175157
+              MOVE 'ERROR EN EL CAMPO' TO WG-LIT-TIPO                   00175261
+           END-EVALUATE                                                 00175357
+           MOVE WG-LIT-TIPO        TO    WS-LIS-SEXO                    00175460
+           MOVE WG-REG-SEX         TO    WS-REG-LISTA                   00175961
+           MOVE ZEROS              TO    WG-CANT-SEXO-SUC.              00176057
+           MOVE ZEROS              TO    WG-TOT-SAL-SEX.                00176157
+           MOVE WS-SUC-SEXO        TO    WG-SEX-ANT.                    00176261
+           WRITE REG-PRINT         FROM  WG-REG-SEX.                    00176361
+           IF WS-PRINT-CODE IS NOT EQUAL '00'                           00176455
+               DISPLAY '* ERROR EN WRITE PRINT  = '                     00176555
+                                           WS-PRINT-CODE                00176655
+                        SET WS-FIN-LECTURA TO TRUE                      00176755
+           END-IF.                                                      00176855
+                                                                        00176955
+       F-2100-CORTE-SEXO.                                               00177055
+                                                                        00177155
+       2220-CORTE-TIPO.                                                 00177251
+                                                                        00177351
+           MOVE SPACES             TO    WS-REG-LISTA.                  00177451
+           MOVE WT-TIP-ANT        TO    WT-TOT-NRO.                     00177554
+           MOVE WT-CANT-TIPO-SUC   TO    WT-TOT-TIPO.                   00177653
+           MOVE WT-TOT-SAL-TIP     TO    WT-TOT-SALDO.                  00177753
+           IF WT-TIP-ANT = 01                                           00177854
+              MOVE ' CTA CORRIENTE' TO WT-LIT-TIP                       00177952
+           ELSE                                                         00178051
+              IF WT-TIP-ANT = 02                                        00178154
+                 MOVE '  CAJA AHORROS' TO WT-LIT-TIP                    00178253
+              ELSE                                                      00178351
+                 MOVE '  PLAZO FIJO' TO WT-LIT-TIP.                     00178453
+           MOVE WT-REG-TIPO        TO    WS-REG-LISTA                   00178551
+           MOVE ZEROS              TO    WT-CANT-TIPO-SUC.              00178653
+           MOVE ZEROS              TO    WT-TOT-SAL-TIP.                00178753
+           MOVE WS-SUC-TIP         TO    WT-TIP-ANT.                    00178853
+           WRITE REG-PRINT         FROM  WT-REG-TIPO.                   00178952
+           IF WS-PRINT-CODE IS NOT EQUAL '00'                           00179051
+               DISPLAY '* ERROR EN WRITE PRINT  = '                     00179151
+                                           WS-PRINT-CODE                00179251
+                        SET WS-FIN-LECTURA TO TRUE                      00179351
+           END-IF.                                                      00179451
+                                                                        00179551
+       F-2220-CORTE-TIPO.                                               00179656
+           EXIT.                                                        00179751
+                                                                        00179830
+      ******************************************************************00179930
+      *                                                                *00180030
+      *  PARRAFO QUE CONTROLA EL CORTE DE SUCURSAL                     *00180151
+      *                                                                *00180251
+      ******************************************************************00180330
+       2230-CORTE-SUCURSAL.                                             00180435
+           MOVE SPACES             TO    WS-REG-LISTA REG-PRINT.        00180546
+           MOVE WS-SUCURSAL-ANT    TO    WS-TOT-NRO.                    00180643
+           MOVE WS-CANT-CTAS-SUC   TO    WS-TOT-CUENTA.                 00180743
+           MOVE WS-TOT-SAL-SUC     TO    WS-TOT-SALDO.                  00180843
+           MOVE WS-REG-TOTAL       TO    WS-REG-LISTA                   00180943
+           ADD  WS-CANT-CTAS-SUC   TO    WS-CANT-CTAS-BCO.              00181036
+           ADD  WS-TOT-SAL-SUC     TO    WS-TOT-SAL-BCO.                00181136
+           MOVE ZEROS              TO    WS-CANT-CTAS-SUC.              00181236
+           MOVE ZEROS              TO    WS-TOT-SAL-SUC.                00181336
+           MOVE WS-SUC-NRO         TO    WS-SUCURSAL-ANT.               00181436
+           WRITE REG-PRINT         FROM  WS-REG-LISTA.                  00181536
+           IF WS-PRINT-CODE IS NOT EQUAL '00'                           00181634
+               DISPLAY '* ERROR EN WRITE PRINT  = '                     00181730
+                                           WS-PRINT-CODE                00181830
+                        SET WS-FIN-LECTURA TO TRUE                      00181930
+           END-IF.                                                      00182037
+                                                                        00182142
+       F-2230-CORTE-SUCURSAL.                                           00182248
+           EXIT.                                                        00182348
+                                                                        00182442
+       3000-MOVER-Y-GRABAR-SALIDA.                                      00182542
+           MOVE SPACES              TO WS-REG-LISTA.                    00182651
+           MOVE WS-SUC-NRO          TO WS-SUCURSAL-ANT.                 00182748
+           MOVE WS-SUC-TIP          TO WT-TIP-ANT.                      00182854
+           MOVE WS-SUC-NRO          TO WS-LIS-NRO.                      00182948
+           MOVE WS-SUC-SEXO         TO WG-SEX-ANT.                      00183060
+           MOVE WS-SUC-TIP-DOC      TO WS-LIS-TIP-DOC.                  00183148
+           MOVE WS-SUC-NRO-DOC      TO WS-LIS-NRO-DOC.                  00183248
+           MOVE WS-SUC-NOMAPE       TO WS-LIS-NOMAPE.                   00183348
+           MOVE WS-SUC-EST-CIV      TO WS-LIS-EST-CIV.                  00183448
+                                                                        00183542
+           EVALUATE WS-SUC-SEXO                                         00183648
+              WHEN 'F'                                                  00183742
+               MOVE 'FEMENINO'      TO WS-LIS-SEXO                      00183842
+              WHEN 'M'                                                  00183942
+               MOVE 'MASCULINO'     TO WS-LIS-SEXO                      00184042
+              WHEN 'O'                                                  00184142
+               MOVE 'OTROS'         TO WS-LIS-SEXO                      00184242
+              WHEN OTHER                                                00184342
+               MOVE WS-SUC-SEXO     TO WS-LIS-SEXO                      00184442
+           END-EVALUATE.                                                00184548
+                                                                        00184642
+           MOVE WS-SUC-TIP          TO WS-LIS-CTA.                      00184748
+           MOVE WS-SUC-SALDO        TO WS-LIS-SALDO.                    00184848
+                                                                        00185056
+           ADD 1 TO WS-CANT-CTAS-SUC                                    00185151
+                    WT-CANT-TIPO-SUC                                    00185256
+                    WG-CANT-SEXO-SUC.                                   00185356
+                                                                        00185456
+           ADD WS-SUC-SALDO TO WS-TOT-SAL-SUC.                          00185548
+           ADD WS-SUC-SALDO TO WT-TOT-SAL-TIP.                          00185653
+           ADD WS-SUC-SALDO TO WG-TOT-SAL-SEX.                          00185762
+                                                                        00185842
+           WRITE REG-PRINT FROM WS-REG-LISTA                            00185948
+           IF WS-PRINT-CODE IS NOT EQUAL '00'                           00186048
+               DISPLAY '* ERROR EN WRITE PRINT  = '                     00186148
+                                  WS-PRINT-CODE                         00186242
+               SET WS-FIN-LECTURA TO TRUE                               00186348
+           END-IF.                                                      00186448
+       F-3000-MOVER-Y-GRABAR-SALIDA.                                    00186548
+           EXIT.                                                        00186648
+                                                                        00187030
+                                                                        00191000
+      **************************************                            00192039
+      *                                    *                            00193039
+      *  CUERPO CIERRE DE FILES            *                            00200039
+      **************************************                            00210039
+       9999-I-CIERRE.                                                   00230037
+                                                                        00240030
+           PERFORM 2100-CORTE-SEXO                                      00240160
+                   THRU F-2100-CORTE-SEXO.                              00240260
+           PERFORM 2220-CORTE-TIPO                                      00240351
+                   THRU F-2220-CORTE-TIPO.                              00240451
+           PERFORM 2230-CORTE-SUCURSAL                                  00241051
+                   THRU F-2230-CORTE-SUCURSAL.                          00242051
+                                                                        00243051
+           MOVE SPACES TO WS-REG-TOTAL.                                 00244051
+                                                                        00245051
+           MOVE 'TOT.FINAL' TO WS-LIT-SUC                               00246051
+           MOVE '<---TOT.CUENTAS' TO WS-LIT-CUENTA.                     00247052
+           MOVE 'SALDOS TOTALES  ' TO WS-LIT-SALDOS.                    00248051
+                                                                        00249051
+           MOVE WS-CANT-CTAS-BCO TO WS-TOT-CUENTA.                      00249151
+           MOVE WS-TOT-SAL-BCO   TO WS-TOT-SALDO.                       00249251
+           MOVE WS-REG-TOTAL TO WS-REG-LISTA.                           00249351
+           WRITE REG-PRINT FROM WS-REG-LISTA                            00249451
+              IF WS-PRINT-CODE IS NOT EQUAL '00'                        00249551
+                 DISPLAY '* ERROR EN WRITE LAST PRINT  = '              00249651
+                           WS-PRINT-CODE                                00249751
+              END-IF.                                                   00249851
+                                                                        00249951
+           CLOSE SUCURSAL                                               00250030
+             IF WS-SUC-CODE IS NOT EQUAL '00'                           00260048
+                DISPLAY '* ERROR EN CLOSE SUCURSAL = '                  00270030
+                                            WS-SUC-CODE                 00280030
+                SET WS-FIN-LECTURA TO TRUE                              00300030
+             END-IF.                                                    00310030
+           CLOSE  PRINT                                                 00320048
+             IF WS-PRINT-CODE IS NOT EQUAL '00'                         00330048
+               DISPLAY '* ERROR EN CLOSE PRINT   ='                     00340030
+                                           WS-PRINT-CODE                00350030
+                                                                        00360030
+                      SET WS-FIN-LECTURA TO TRUE                        00362030
+             END-IF.                                                    00363048
+                                                                        00364048
+       9999-F-CIERRE.                                                   00370048
+           EXIT.                                                        00380048

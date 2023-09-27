@@ -1,0 +1,590 @@
+       CBL TEST                                                         00001000
+       IDENTIFICATION DIVISION.                                         00002000
+      *                                                        *        00003000
+       PROGRAM-ID PGMDB251.                                             00004099
+      **********************************************************        00016800
+      *      EJERCICIO 40                                      *        00016999
+      **********************************************************        00017000
+      *  FECHA   *    DETALLE        * COD *                            00018000
+      **************************************                            00019000
+      *          *                   *     *                            00019100
+      *09/11/2022*COMIENZO EJERCICIO *     *                            00019299
+      *          *                   *     *                            00019321
+      **************************************                            00019400
+       ENVIRONMENT DIVISION.                                            00019500
+       CONFIGURATION SECTION.                                           00019600
+       SPECIAL-NAMES.                                                   00019700
+           DECIMAL-POINT IS COMMA.                                      00019800
+                                                                        00019900
+       INPUT-OUTPUT SECTION.                                            00020000
+       FILE-CONTROL.                                                    00020100
+                                                                        00020299
+             SELECT ENTRADA ASSIGN DDENTRA                              00020399
+             FILE STATUS IS WS-FS-ENT.                                  00020499
+                                                                        00023199
+             SELECT SALIDA  ASSIGN DDSALE                               00023299
+             FILE STATUS IS WS-FS-SAL.                                  00023399
+                                                                        00023499
+       DATA DIVISION.                                                   00023500
+       FILE SECTION.                                                    00023600
+                                                                        00023799
+       FD ENTRADA                                                       00023899
+             BLOCK CONTAINS 0 RECORDS                                   00023999
+             RECORDING MODE IS F.                                       00024099
+                                                                        00024199
+       01 REG-ENTRADA     PIC X(80).                                    00024299
+                                                                        00025030
+       FD SALIDA                                                        00026099
+             BLOCK CONTAINS 0 RECORDS                                   00027099
+             RECORDING MODE IS F.                                       00028099
+                                                                        00029099
+       01 REG-SALIDA      PIC X(132).                                   00030099
+      **************************************                            00041100
+       WORKING-STORAGE SECTION.                                         00041200
+      **************************************                            00041307
+      *FILE STATUS ARCHIVOS Y TABLAS                                    00041499
+       77  WS-FS-ENT           PIC XX                   VALUE SPACES.   00041599
+       77  WS-FS-SAL           PIC XX                   VALUE SPACES.   00041699
+       77  WS-SQLCODE          PIC +++999 USAGE DISPLAY VALUE ZEROES.   00041799
+                                                                        00041899
+      *CONTADORES                                                       00041999
+       77  WS-CUENTA-LINEA     PIC 99                   VALUE ZEROES.   00042099
+       77  WS-CUENTA-PAGINA    PIC 99                   VALUE ZEROES.   00042199
+       77  WS-PAGINA           PIC 99                   VALUE ZEROES.   00042299
+       77  WS-CONT-LEI         PIC 9(3)                 VALUE ZEROES.   00042399
+       77  WS-CONT-ERR         PIC 9(3)                 VALUE ZEROES.   00042499
+       77  WS-CONT-ALT         PIC 9(3)                 VALUE ZEROES.   00042599
+       77  WS-CONT-MOD         PIC 9(3)                 VALUE ZEROES.   00042699
+       77  WS-DISP             PIC ZZ9                  VALUE ZEROES.   00042799
+                                                                        00042899
+      *ESTRUCTURA DE FECHA VALIDADA                                     00042999
+       01 WS-FECHA-VAL.                                                 00043099
+         03 WS-ANIO                PIC 9999      VALUE ZEROES.          00043199
+         03 FILLER                 PIC X         VALUE '-'.             00043299
+         03 WS-MES                 PIC 99        VALUE ZEROES.          00043399
+         03 FILLER                 PIC X         VALUE '-'.             00043499
+         03 WS-DIA                 PIC 99        VALUE ZEROES.          00043599
+                                                                        00043699
+      *ESTRUCTURA DE FECHA PARA VALIDAR                                 00043799
+       01 WS-FECHA0.                                                    00043899
+         03 WS-ANIO0               PIC 9999      VALUE ZEROES.          00043999
+         03 WS-MES0                PIC 99        VALUE ZEROES.          00044099
+         03 WS-DIA0                PIC 99        VALUE ZEROES.          00044199
+                                                                        00044299
+       COPY NOVECLIE.                                                   00044399
+                                                                        00044499
+      *FIN DE LECTURA PROGRAMA                                          00044531
+       01  WS-STATUS-FIN       PIC X.                                   00044699
+           88  WS-FIN-LECTURA                           VALUE 'Y'.      00044799
+           88  WS-NO-FIN-LECTURA                        VALUE 'N'.      00045099
+                                                                        00052800
+      *FIN DE LECTURA SQL                                               00052999
+       01  WS-STATUS-SQL       PIC X.                                   00053099
+           88  WS-FIN-SQL                               VALUE 'Y'.      00053199
+           88  WS-NO-FIN-SQL                            VALUE 'N'.      00053299
+                                                                        00065317
+      *DETECCION DE ERROR EN VALIDACION                                 00065499
+       01  WS-STATUS-ERROR     PIC X.                                   00065599
+           88  WS-SI-ERROR                              VALUE 'Y'.      00065699
+           88  WS-NO-ERROR                              VALUE 'N'.      00065799
+                                                                        00065899
+      *ESTRUCTURAS PARA IMPRESION                                       00065999
+                                                                        00066099
+      *ESTRUCTURA TITULO                                                00066199
+       01 WS-TITULO.                                                    00066299
+           03 FILLER         PIC X(01) VALUE '|'.                       00066399
+           03 FILLER         PIC X(02) VALUE SPACES.                    00066499
+           03 FILLER         PIC X(12) VALUE 'TIPO NOVEDAD'.            00066599
+           03 FILLER         PIC X(02) VALUE SPACES.                    00066699
+           03 FILLER         PIC X(01) VALUE '|'.                       00066799
+           03 FILLER         PIC X(02) VALUE SPACES.                    00066899
+           03 FILLER         PIC X(08) VALUE 'TIPO DOC'.                00066999
+           03 FILLER         PIC X(02) VALUE SPACES.                    00067099
+           03 FILLER         PIC X(01) VALUE '|'.                       00067199
+           03 FILLER         PIC X(02) VALUE SPACES.                    00067299
+           03 FILLER         PIC X(14) VALUE 'NRO DOCUMENTO'.           00067399
+           03 FILLER         PIC X(02) VALUE SPACES.                    00067499
+           03 FILLER         PIC X(01) VALUE '|'.                       00067599
+           03 FILLER         PIC X(02) VALUE SPACES.                    00067699
+           03 FILLER         PIC X(12) VALUE 'NRO. CLIENTE'.            00067799
+           03 FILLER         PIC X(02) VALUE SPACES.                    00067899
+           03 FILLER         PIC X(01) VALUE '|'.                       00067999
+           03 FILLER         PIC X(10) VALUE SPACES.                    00068099
+           03 FILLER         PIC X(14) VALUE 'NOMBRE CLIENTE'.          00068199
+           03 FILLER         PIC X(10) VALUE SPACES.                    00068299
+           03 FILLER         PIC X(01) VALUE '|'.                       00068399
+           03 FILLER         PIC X(04) VALUE SPACES.                    00068499
+           03 FILLER         PIC X(06) VALUE 'FECNAC'.                  00068599
+           03 FILLER         PIC X(04) VALUE SPACES.                    00068699
+           03 FILLER         PIC X(01) VALUE '|'.                       00068799
+           03 FILLER         PIC X(01) VALUE SPACES.                    00068899
+           03 FILLER         PIC X(04) VALUE 'SEXO'.                    00068999
+           03 FILLER         PIC X(01) VALUE SPACES.                    00069099
+           03 FILLER         PIC X(01) VALUE '|'.                       00069199
+                                                                        00069299
+      *ESTRUCTURA ESPACIO                                               00069399
+       01 WS-ESPACIO.                                                   00069499
+           03 FILLER         PIC X(99) VALUE SPACES.                    00069599
+                                                                        00069699
+      *ESTRUCTURA DETALLE DE ERROR                                      00069799
+       01 WS-ERROR.                                                     00069899
+           03 FILLER         PIC X(01) VALUE '|'.                       00069999
+           03 WS-DET-ERR     PIC X(40) VALUE SPACES.                    00070099
+           03 FILLER         PIC X(01) VALUE '|'.                       00070199
+                                                                        00070299
+      *ESTRUCTURA DETALLE DEL REGISTRO ERRONEO                          00070399
+       01 WS-DETALLE.                                                   00070499
+           03 FILLER         PIC X(01) VALUE '|'.                       00070599
+           03 FILLER         PIC X(07) VALUE SPACES.                    00070699
+           03 WS-D-TIPNOV    PIC X(02) VALUE ZEROES.                    00070799
+           03 FILLER         PIC X(07) VALUE SPACES.                    00070899
+           03 FILLER         PIC X(01) VALUE '|'.                       00070999
+           03 FILLER         PIC X(05) VALUE SPACES.                    00071099
+           03 WS-D-TIPDOC    PIC X(02) VALUE ZEROES.                    00071199
+           03 FILLER         PIC X(05) VALUE SPACES.                    00071299
+           03 FILLER         PIC X(01) VALUE '|'.                       00071399
+           03 FILLER         PIC X(03) VALUE SPACES.                    00071499
+           03 WS-D-NRODOC    PIC X(11) VALUE ZEROES.                    00071599
+           03 FILLER         PIC X(04) VALUE SPACES.                    00071699
+           03 FILLER         PIC X(01) VALUE '|'.                       00071799
+           03 FILLER         PIC X(06) VALUE SPACES.                    00071899
+           03 WS-D-NROCLI    PIC X(04) VALUE SPACES.                    00071999
+           03 FILLER         PIC X(06) VALUE SPACES.                    00072099
+           03 FILLER         PIC X(01) VALUE '|'.                       00072199
+           03 FILLER         PIC X(02) VALUE SPACES.                    00072299
+           03 WS-D-NOMAPE    PIC X(30) VALUE SPACES.                    00072399
+           03 FILLER         PIC X(02) VALUE SPACES.                    00072499
+           03 FILLER         PIC X(01) VALUE '|'.                       00072599
+           03 FILLER         PIC X(03) VALUE SPACES.                    00072699
+           03 WS-D-FECNAC    PIC X(08) VALUE SPACES.                    00072799
+           03 FILLER         PIC X(03) VALUE SPACES.                    00072899
+           03 FILLER         PIC X(01) VALUE '|'.                       00072999
+           03 FILLER         PIC X(02) VALUE SPACES.                    00073099
+           03 WS-D-SEXO      PIC X(02) VALUE SPACES.                    00073199
+           03 FILLER         PIC X(02) VALUE SPACES.                    00073299
+           03 FILLER         PIC X(01) VALUE '|'.                       00073399
+                                                                        00074099
+      * INCLUDE PARA SQL                                                00076117
+                                                                        00076217
+            EXEC SQL                                                    00076317
+              INCLUDE SQLCA                                             00076417
+            END-EXEC.                                                   00076517
+                                                                        00076656
+            EXEC SQL                                                    00076799
+              INCLUDE TB99CLI                                           00076899
+            END-EXEC.                                                   00076999
+                                                                        00077099
+            EXEC SQL                                                    00077599
+              DECLARE ITEM_CURSOR   CURSOR                              00077699
+              FOR                                                       00077799
+              SELECT TIPDOC, NRODOC, NROCLI                             00077899
+                   FROM ITPLZRY.TB99CLIE                                00078099
+            END-EXEC.                                                   00078499
+                                                                        00079399
+      ***************************************************************.  00079417
+       PROCEDURE DIVISION.                                              00079599
+      **************************************                            00079617
+      *                                    *                            00079717
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00079817
+      *                                    *                            00079917
+      **************************************                            00080017
+       MAIN-PROGRAM.                                                    00080117
+                                                                        00080217
+           PERFORM 1000-I-INICIO   THRU                                 00080317
+                   1000-F-INICIO.                                       00080417
+                                                                        00080517
+           PERFORM 2000-I-PROCESO  THRU                                 00080699
+                   2000-F-PROCESO    UNTIL WS-FIN-LECTURA.              00080799
+                                                                        00080817
+           PERFORM 9999-I-FINAL    THRU                                 00080917
+                   9999-F-FINAL.                                        00081017
+                                                                        00081117
+       F-MAIN-PROGRAM. GOBACK.                                          00081217
+                                                                        00081317
+      **************************************                            00081417
+      *                                    *                            00081517
+      *  CUERPO INICIO APERTURA ARCHIVOS   *                            00081617
+      *                                    *                            00081717
+      **************************************                            00081817
+       1000-I-INICIO.                                                   00081917
+                                                                        00082099
+           SET WS-NO-FIN-LECTURA       TO TRUE.                         00082199
+           SET WS-NO-FIN-SQL           TO TRUE.                         00082299
+           SET WS-NO-ERROR             TO TRUE.                         00082399
+           MOVE ZEROES                 TO WS-CUENTA-LINEA               00082499
+                                          WS-CONT-LEI                   00082599
+                                          WS-CONT-ERR                   00082699
+                                          WS-CONT-ALT                   00082799
+                                          WS-CONT-MOD                   00082899
+                                                                        00082999
+           OPEN INPUT ENTRADA.                                          00083099
+           IF WS-FS-ENT    IS NOT EQUAL '00'                            00083199
+              DISPLAY '* ERROR EN OPEN ENTRADA = ' WS-FS-ENT            00083299
+              SET  WS-FIN-LECTURA TO TRUE                               00083399
+           END-IF.                                                      00083499
+                                                                        00083599
+           OPEN OUTPUT SALIDA.                                          00083699
+           IF WS-FS-SAL    IS NOT EQUAL '00'                            00083799
+              DISPLAY '* ERROR EN OPEN SALIDA = ' WS-FS-SAL             00083899
+              SET  WS-FIN-LECTURA TO TRUE                               00083999
+           END-IF.                                                      00084099
+                                                                        00084199
+      * OPEN CURSOR                                                     00084299
+           EXEC SQL                                                     00084399
+              OPEN ITEM_CURSOR                                          00084499
+           END-EXEC.                                                    00084599
+                                                                        00084699
+           IF SQLCODE NOT EQUAL ZEROS                                   00084799
+              MOVE SQLCODE   TO WS-SQLCODE                              00084899
+              DISPLAY '* ERROR OPEN CURSOR      = ' WS-SQLCODE          00084999
+              SET  WS-FIN-LECTURA TO TRUE                               00085099
+           END-IF.                                                      00085199
+                                                                        00085299
+       1000-F-INICIO.   EXIT.                                           00090400
+                                                                        00090500
+      **************************************                            00090600
+      *                                    *                            00090700
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00090800
+      *                                    *                            00090900
+      **************************************                            00091000
+       2000-I-PROCESO.                                                  00091199
+                                                                        00091299
+      *LEO REGISTROS PARA PODER COMPARAR                                00091399
+           READ ENTRADA INTO WS-REG-NOVECLI                             00091699
+           EVALUATE WS-FS-ENT                                           00091799
+            WHEN 00                                                     00091899
+            ADD  1                   TO WS-CONT-LEI                     00091999
+             MOVE NOV-TIP-DOC            TO WD-TIPDOC                   00092099
+             MOVE NOV-NRO-DOC            TO WD-NRODOC                   00092199
+             PERFORM 2050-I-PORQUERIA THRU                              00092299
+                     2050-F-PORQUERIA                                   00092399
+            WHEN 10                                                     00092499
+             SET WS-FIN-LECTURA      TO TRUE                            00092599
+            WHEN OTHER                                                  00092699
+             DISPLAY 'ARCHIVO ENTRADA ERROR LECTURA FS: ' WS-FS-ENT     00092799
+             SET WS-FIN-LECTURA      TO TRUE                            00092899
+           END-EVALUATE.                                                00092999
+                                                                        00093099
+       2000-F-PROCESO. EXIT.                                            00093199
+                                                                        00093299
+       2050-I-PORQUERIA.                                                00093399
+                                                                        00093499
+      *EVALUO EL TIPO DE NOVEDAD Y COMIENZO A COMPARAR                  00093599
+           EVALUATE NOV-TIP-NOV                                         00093699
+             WHEN 'AL'                                                  00093799
+                PERFORM 2100-I-ALTA   THRU                              00093899
+                        2100-F-ALTA                                     00093999
+                                                                        00094099
+             WHEN 'CL'                                                  00094199
+                PERFORM 2200-I-NUMCLI THRU                              00094299
+                        2200-F-NUMCLI                                   00094399
+                                                                        00094599
+             WHEN 'CN'                                                  00094699
+                PERFORM 2300-I-NOMAPE THRU                              00094799
+                        2300-F-NOMAPE                                   00094899
+                                                                        00095099
+             WHEN 'CX'                                                  00095199
+                PERFORM 2400-I-SEXO   THRU                              00095299
+                        2400-F-SEXO                                     00095399
+                                                                        00095599
+             WHEN OTHER                                                 00095699
+              MOVE 'ERROR EN EL CAMPO TIPO NOVEDAD ' TO WS-DET-ERR      00095799
+                PERFORM 2500-I-ERR    THRU                              00095899
+                        2500-F-ERR                                      00095999
+                                                                        00096099
+           END-EVALUATE                                                 00096199
+           IF WS-SI-ERROR                                               00096299
+                PERFORM 2500-I-ERR    THRU                              00096399
+                        2500-F-ERR                                      00096499
+           END-IF.                                                      00096599
+                                                                        00096699
+       2050-F-PORQUERIA. EXIT.                                          00098499
+                                                                        00098599
+       2100-I-ALTA.                                                     00098799
+      *VALIDO LOS CAMPOS NECESARIOS Y INTENTO EL INSERT                 00098899
+           IF NOV-CLI-NRO IS NUMERIC                                    00102699
+              CONTINUE                                                  00102799
+           ELSE                                                         00102899
+              SET WS-SI-ERROR TO TRUE                                   00102999
+              MOVE 'ERROR EN EL CAMPO NRO CLIENTE' TO WS-DET-ERR        00103199
+           END-IF                                                       00103299
+           IF NOV-CLI-NOMBRE NOT EQUAL SPACES                           00103399
+              CONTINUE                                                  00103499
+           ELSE                                                         00103599
+              SET WS-SI-ERROR TO TRUE                                   00103699
+              MOVE 'ERROR EN EL CAMPO NOMBRE' TO WS-DET-ERR             00103799
+           END-IF                                                       00103899
+           IF NOV-CLI-SEXO = 'M' OR 'F' OR 'O'                          00103999
+              CONTINUE                                                  00104099
+           ELSE                                                         00104199
+              SET WS-SI-ERROR TO TRUE                                   00104299
+              MOVE 'ERROR EN EL CAMPO SEXO' TO WS-DET-ERR               00104399
+           END-IF                                                       00104499
+      *VALIDO FECHA                                                     00104599
+             PERFORM 2600-I-FECHA THRU                                  00104699
+                     2600-F-FECHA                                       00104799
+                                                                        00104899
+           IF WS-NO-ERROR                                               00104999
+      *CAMPOS VALIDOS REALIZO EL INSERT                                 00105099
+             MOVE NOV-TIP-DOC            TO WD-TIPDOC                   00105199
+             MOVE NOV-NRO-DOC            TO WD-NRODOC                   00105299
+             MOVE NOV-CLI-NRO            TO WD-NROCLI                   00105399
+             MOVE NOV-CLI-NOMBRE         TO WD-NOMAPE                   00105499
+             MOVE WS-FECHA-VAL           TO WD-FECNAC                   00105599
+             MOVE NOV-CLI-SEXO           TO WD-SEXO                     00105699
+                                                                        00105799
+      *INSERTO EN LOS CAMPOS CORRESPONDIENTES                           00105899
+             EXEC SQL                                                   00105999
+             INSERT INTO ITPLZRY.TB99CLIE(TIPDOC,NRODOC,                00106099
+             NROCLI,NOMAPE,FECNAC,SEXO)                                 00106199
+             VALUES                      (:WD-TIPDOC,                   00106299
+             :WD-NRODOC,                                                00106399
+             :WD-NROCLI,                                                00106499
+             :WD-NOMAPE,                                                00106599
+             :WD-FECNAC,                                                00106699
+             :WD-SEXO)                                                  00106799
+             END-EXEC                                                   00106899
+              EVALUATE TRUE                                             00106999
+               WHEN SQLCODE EQUAL ZEROS                                 00107099
+      *INSERT SATISFACTORIO                                             00107199
+                   ADD                1     TO WS-CONT-ALT              00107299
+               WHEN SQLCODE = -803                                      00107399
+      *INSERT FALLIDO, REGISTRO EXISTENTE                               00107499
+                    MOVE 'REGISTRO EXISTENTE' TO WS-DET-ERR             00107599
+                    PERFORM 2500-I-ERR THRU                             00107699
+                            2500-F-ERR                                  00107799
+               WHEN OTHER                                               00107899
+      *INSERT FALLIDO                                                   00107999
+                    MOVE SQLCODE TO WS-SQLCODE                          00108099
+                    DISPLAY 'ERROR INSERT ALTA: ' WS-SQLCODE            00108199
+                    SET WS-FIN-LECTURA TO TRUE                          00108299
+                    SET WS-FIN-SQL TO TRUE                              00108399
+               END-EVALUATE                                             00108699
+           ELSE                                                         00108799
+                PERFORM 2500-I-ERR THRU                                 00108899
+                        2500-F-ERR                                      00108999
+           END-IF.                                                      00109099
+                                                                        00110699
+       2100-F-ALTA. EXIT.                                               00111099
+                                                                        00119199
+       2200-I-NUMCLI.                                                   00125599
+                                                                        00125699
+           IF NOV-CLI-NRO IS NUMERIC                                    00125799
+           MOVE NOV-CLI-NRO           TO WD-NROCLI                      00125899
+           EXEC SQL                                                     00125999
+             UPDATE ITPLZRY.TB99CLIE                                    00126099
+             SET NROCLI = :WD-NROCLI                                    00126199
+             WHERE TIPDOC = :WD-TIPDOC AND NRODOC = :WD-NRODOC          00126299
+           END-EXEC                                                     00126399
+                                                                        00126599
+           EVALUATE TRUE                                                00126699
+      *MODIFICACION EXITOSA                                             00126799
+             WHEN SQLCODE EQUAL ZEROS                                   00126899
+           ADD 1   TO WS-CONT-MOD                                       00126999
+             WHEN SQLCODE EQUAL +100                                    00127199
+      *MODIFICACION ERRONEA, NO EXISTE EL REGISTRO                      00127299
+               MOVE SQLCODE           TO WS-SQLCODE                     00127399
+               MOVE 'EL REGISTRO NO EXISTE EN LA TABLA '  TO WS-DET-ERR 00127499
+               SET WS-SI-ERROR TO TRUE                                  00127599
+             WHEN OTHER                                                 00127699
+      *MODIFICACION ERRONEA                                             00127799
+                MOVE SQLCODE           TO WS-SQLCODE                    00127899
+                SET WS-FIN-SQL TO TRUE                                  00127999
+                DISPLAY 'ERROR EN UPDATE 2200 : '   WS-SQLCODE          00128099
+            END-EVALUATE                                                00128199
+           ELSE                                                         00128299
+           MOVE 'ERROR EN EL CAMPO NUMERO DE CLIENTE '  TO WS-DET-ERR   00128399
+               SET WS-SI-ERROR TO TRUE                                  00128499
+           END-IF.                                                      00128599
+                                                                        00128699
+       2200-F-NUMCLI. EXIT.                                             00128799
+                                                                        00128899
+       2300-I-NOMAPE.                                                   00128999
+                                                                        00129099
+           IF NOV-CLI-NOMBRE NOT EQUAL SPACES                           00129199
+           MOVE NOV-CLI-NOMBRE        TO WD-NOMAPE                      00129299
+           EXEC SQL                                                     00129399
+             UPDATE ITPLZRY.TB99CLIE                                    00129499
+             SET NOMAPE = :WD-NOMAPE                                    00129599
+             WHERE TIPDOC = :WD-TIPDOC AND NRODOC = :WD-NRODOC          00129699
+           END-EXEC                                                     00129799
+                                                                        00129899
+           EVALUATE TRUE                                                00129999
+             WHEN SQLCODE EQUAL ZEROS                                   00130099
+           ADD 1   TO WS-CONT-MOD                                       00130199
+             WHEN SQLCODE EQUAL +100                                    00130399
+               MOVE SQLCODE           TO WS-SQLCODE                     00130499
+               MOVE 'EL REGISTRO NO EXISTE EN LA TABLA '  TO WS-DET-ERR 00130599
+               SET WS-SI-ERROR TO TRUE                                  00130699
+             WHEN OTHER                                                 00130799
+               SET WS-FIN-SQL TO TRUE                                   00130899
+                MOVE SQLCODE           TO WS-SQLCODE                    00130999
+                DISPLAY 'ERROR EN UPDATE 2300 : '   WS-SQLCODE          00131099
+            END-EVALUATE                                                00131199
+           ELSE                                                         00131299
+           MOVE 'ERROR EN EL CAMPO NOMAPE ' TO WS-DET-ERR               00131399
+               SET WS-SI-ERROR TO TRUE                                  00131499
+           END-IF.                                                      00131599
+                                                                        00131699
+       2300-F-NOMAPE. EXIT.                                             00131799
+                                                                        00131899
+       2400-I-SEXO.                                                     00131999
+                                                                        00132099
+           IF NOV-CLI-SEXO = 'F' OR 'M' OR 'O'                          00132199
+           MOVE NOV-CLI-SEXO           TO WD-SEXO                       00132299
+           EXEC SQL                                                     00132399
+             UPDATE ITPLZRY.TB99CLIE                                    00132499
+             SET SEXO = :WD-SEXO                                        00132599
+             WHERE TIPDOC = :WD-TIPDOC AND NRODOC = :WD-NRODOC          00132699
+           END-EXEC                                                     00132799
+                                                                        00132899
+           EVALUATE TRUE                                                00132999
+             WHEN SQLCODE EQUAL ZEROS                                   00133099
+           ADD 1   TO WS-CONT-MOD                                       00133199
+             WHEN SQLCODE EQUAL +100                                    00133299
+               MOVE SQLCODE           TO WS-SQLCODE                     00133499
+               MOVE 'EL REGISTRO NO EXISTE EN LA TABLA '  TO WS-DET-ERR 00133599
+               SET WS-SI-ERROR TO TRUE                                  00133699
+             WHEN OTHER                                                 00133799
+               SET WS-FIN-SQL TO TRUE                                   00133899
+                MOVE SQLCODE           TO WS-SQLCODE                    00133999
+                DISPLAY 'ERROR EN UPDATE 2400 : '   WS-SQLCODE          00134099
+            END-EVALUATE                                                00134199
+           ELSE                                                         00134299
+            MOVE 'ERROR EN EL CAMPO SEXO' TO WS-DET-ERR                 00134399
+               SET WS-SI-ERROR TO TRUE                                  00134499
+           END-IF.                                                      00134599
+                                                                        00134699
+       2400-F-SEXO. EXIT.                                               00134799
+                                                                        00134899
+       2500-I-ERR.                                                      00134999
+      *SI HAY ALGUN ERROR, LO IMPRIMO                                   00135099
+           SET WS-NO-ERROR TO TRUE                                      00135199
+           ADD 1           TO WS-CONT-ERR                               00135299
+           PERFORM 6300-I-TITULO  THRU                                  00135399
+                   6300-F-TITULO                                        00135499
+                                                                        00135599
+           WRITE REG-SALIDA FROM WS-ERROR   AFTER 1                     00135699
+           ADD 1 TO WS-CUENTA-LINEA                                     00135799
+              IF WS-FS-SAL IS NOT EQUAL '00'                            00135899
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL       00135999
+             END-IF.                                                    00136099
+             INITIALIZE WS-ERROR.                                       00136199
+                                                                        00136299
+                                                                        00136399
+       2500-F-ERR. EXIT.                                                00136499
+                                                                        00136599
+       2600-I-FECHA.                                                    00136699
+                                                                        00136799
+      *MUEVO LAS FECHAS A LOS CAMPOS PARA VALIDAR E INSERTAR GUIONES    00136899
+           MOVE NOV-CLI-FENAC TO WS-FECHA0                              00136999
+           MOVE WS-ANIO0 TO WS-ANIO                                     00137099
+           MOVE WS-MES0  TO WS-MES                                      00137199
+           MOVE WS-DIA0  TO WS-DIA                                      00137299
+           IF WS-ANIO < '2023' AND WS-ANIO > '1900'                     00137399
+             IF WS-MES = '04' OR '06' OR '09' OR '11'                   00137499
+               IF WS-DIA > '31'                                         00137599
+                SET WS-SI-ERROR TO TRUE                                 00137699
+               ELSE                                                     00137799
+                CONTINUE                                                00137899
+               END-IF                                                   00137999
+             ELSE                                                       00138099
+              IF WS-MES = '02'                                          00138199
+               IF WS-DIA > '29'                                         00138299
+                SET WS-SI-ERROR TO TRUE                                 00138399
+               ELSE                                                     00138499
+                CONTINUE                                                00138599
+              ELSE                                                      00138699
+               IF WS-DIA > '32'                                         00138799
+                SET WS-SI-ERROR TO TRUE                                 00138899
+               ELSE                                                     00138999
+               CONTINUE                                                 00139099
+               END-IF                                                   00139199
+             END-IF                                                     00139299
+           ELSE                                                         00139399
+            CONTINUE                                                    00139499
+           END-IF                                                       00139599
+           IF WS-SI-ERROR                                               00139699
+             MOVE 'ERROR EN EL CAMPO FECHA ' TO WS-DET-ERR              00139799
+           END-IF.                                                      00139899
+                                                                        00139999
+       2600-F-FECHA. EXIT.                                              00140099
+                                                                        00140199
+       6300-I-TITULO.                                                   00140299
+                                                                        00140399
+      *IMPRESION DEL TITULO Y DETALLE CON EL ERROR CORRESPONDIENTE      00140499
+           MOVE 3   TO WS-CUENTA-LINEA                                  00140599
+           ADD  1   TO WS-CUENTA-PAGINA                                 00140699
+           MOVE WS-CUENTA-PAGINA TO WS-PAGINA                           00140799
+           WRITE REG-SALIDA FROM WS-ESPACIO                             00140899
+              IF WS-FS-SAL IS NOT EQUAL '00'                            00140999
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL       00141099
+             END-IF.                                                    00141199
+           WRITE REG-SALIDA FROM WS-TITULO                              00141299
+              IF WS-FS-SAL IS NOT EQUAL '00'                            00141399
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL       00141499
+             END-IF.                                                    00141599
+                    PERFORM 6500-I-DETALLE  THRU                        00141699
+                            6500-F-DETALLE.                             00141799
+                                                                        00141899
+       6300-F-TITULO. EXIT.                                             00141999
+                                                                        00142099
+       6500-I-DETALLE.                                                  00142199
+                                                                        00142299
+      *IMPRESION DEL DETALLE                                            00142399
+           MOVE NOV-TIP-NOV               TO WS-D-TIPNOV                00142499
+           MOVE NOV-TIP-DOC               TO WS-D-TIPDOC                00142599
+           MOVE NOV-NRO-DOC               TO WS-D-NRODOC                00142699
+           MOVE NOV-CLI-NRO               TO WS-D-NROCLI                00142799
+           MOVE NOV-CLI-NOMBRE            TO WS-D-NOMAPE                00142899
+           MOVE NOV-CLI-FENAC             TO WS-D-FECNAC                00142999
+           MOVE NOV-CLI-SEXO              TO WS-D-SEXO                  00143099
+           WRITE REG-SALIDA FROM WS-DETALLE AFTER 1                     00143199
+           ADD 1 TO WS-CUENTA-LINEA                                     00143299
+              IF WS-FS-SAL IS NOT EQUAL '00'                            00143399
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL       00143499
+             END-IF.                                                    00143599
+             INITIALIZE WS-DETALLE.                                     00143699
+                                                                        00143799
+       6500-F-DETALLE. EXIT.                                            00143899
+                                                                        00143999
+                                                                        00144099
+      **************************************                            00144199
+      *                                    *                            00144299
+      *  CUERPO FINAL CIERRE DE FILES      *                            00144399
+      *                                    *                            00144499
+      **************************************                            00144599
+                                                                        00144699
+       9999-I-FINAL.                                                    00144799
+                                                                        00144899
+      *SI HAY ALGUN ERROR EN SQL, NO REALIZA COMMIT                     00144999
+           IF WS-FIN-SQL                                                00145099
+                DISPLAY 'FIN PROGRAMA ERRONEO'                          00145199
+                EXEC SQL                                                00145299
+                  ROLLBACK                                              00145399
+                END-EXEC                                                00145499
+             ELSE                                                       00145599
+      *SI NO HAY ERRORES, MMUESTRA CONTADORES FINALES                   00145699
+                DISPLAY 'FIN PROGRAMA EXITOSO'                          00145799
+                MOVE WS-CONT-LEI        TO WS-DISP                      00145899
+                DISPLAY 'CANT DE REGISTROS LEIDOS      : ' WS-CONT-LEI  00145999
+                MOVE WS-CONT-ERR        TO WS-DISP                      00146099
+                DISPLAY 'CANT DE REGISTROS ERRONEOS    : ' WS-CONT-ERR  00146199
+                MOVE WS-CONT-ALT        TO WS-DISP                      00146299
+                DISPLAY 'CANT DE REGISTROS ALTA        : ' WS-CONT-ALT  00146399
+                MOVE WS-CONT-MOD        TO WS-DISP                      00146499
+                DISPLAY 'CANT DE REGISTROS MODIFICADOS : ' WS-CONT-MOD  00146599
+           END-IF.                                                      00146699
+           CLOSE ENTRADA                                                00146799
+              IF WS-FS-ENT  IS NOT EQUAL '00'                           00146899
+                DISPLAY '* ERROR EN CLOSE ENTRADA = '                   00146999
+                                            WS-FS-ENT                   00147099
+             END-IF.                                                    00147199
+                                                                        00147299
+           CLOSE SALIDA                                                 00147399
+              IF WS-FS-SAL  IS NOT EQUAL '00'                           00147499
+                DISPLAY '* ERROR EN CLOSE SALIDA  = '                   00147599
+                                            WS-FS-SAL                   00147699
+             END-IF.                                                    00147799
+       9999-F-FINAL.                                                    00148099
+           EXIT.                                                        00150017

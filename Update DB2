@@ -1,0 +1,185 @@
+       CBL TEST                                                         00001000
+       IDENTIFICATION DIVISION.                                         00002000
+      *                                                        *        00003000
+       PROGRAM-ID PGMDB251.                                             00004021
+      **********************************************************        00016800
+      *      EJERCICIO 37                                      *        00016999
+      **********************************************************        00017000
+      *  FECHA   *    DETALLE        * COD *                            00018000
+      **************************************                            00019000
+      *          *                   *     *                            00019100
+      *02/11/2022*COMIENZO EJERCICIO *     *                            00019299
+      *          *                   *     *                            00019321
+      **************************************                            00019400
+       ENVIRONMENT DIVISION.                                            00019500
+       CONFIGURATION SECTION.                                           00019600
+       SPECIAL-NAMES.                                                   00019700
+           DECIMAL-POINT IS COMMA.                                      00019800
+                                                                        00019900
+       INPUT-OUTPUT SECTION.                                            00020000
+       FILE-CONTROL.                                                    00020100
+       DATA DIVISION.                                                   00023200
+       FILE SECTION.                                                    00023300
+                                                                        00024030
+      **************************************                            00041100
+       WORKING-STORAGE SECTION.                                         00041200
+      **************************************                            00041307
+       77  WS-SQLCODE          PIC +++999 USAGE DISPLAY VALUE ZEROES.   00041999
+                                                                        00042433
+      *FIN DE LECTURA PROGRAMA                                          00042531
+       01  WS-STATUS-FIN       PIC X.                                   00042699
+           88  WS-FIN-LECTURA                           VALUE 'Y'.      00042799
+           88  WS-NO-FIN-LECTURA                        VALUE 'N'.      00043099
+                                                                        00052800
+       01  WS-STATUS-SQL       PIC X.                                   00052999
+           88  WS-FIN-SQL                               VALUE 'Y'.      00053099
+           88  WS-NO-FIN-SQL                            VALUE 'N'.      00053199
+                                                                        00065317
+      * INCLUDE PARA SQL                                                00065417
+                                                                        00065517
+            EXEC SQL                                                    00065617
+              INCLUDE SQLCA                                             00065717
+            END-EXEC.                                                   00065817
+                                                                        00068956
+            EXEC SQL                                                    00069099
+              INCLUDE TB99CLI                                           00069199
+            END-EXEC.                                                   00069299
+                                                                        00069399
+            EXEC SQL                                                    00069499
+              INCLUDE TB99CUE                                           00069599
+            END-EXEC.                                                   00069699
+                                                                        00069799
+      ***************************************************************.  00069817
+       PROCEDURE DIVISION.                                              00069917
+      **************************************                            00070017
+      *                                    *                            00070117
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00070217
+      *                                    *                            00070317
+      **************************************                            00070417
+                                                                        00070599
+       MAIN-PROGRAM.                                                    00070617
+                                                                        00070717
+           PERFORM 1000-I-INICIO   THRU                                 00070817
+                   1000-F-INICIO.                                       00070917
+                                                                        00071017
+           PERFORM 2000-I-PROCESO  THRU                                 00071117
+                   2000-F-PROCESO        UNTIL WS-FIN-LECTURA.          00071231
+                                                                        00071317
+           PERFORM 9999-I-FINAL    THRU                                 00071417
+                   9999-F-FINAL.                                        00071517
+                                                                        00071617
+       F-MAIN-PROGRAM. GOBACK.                                          00071717
+                                                                        00071817
+      **************************************                            00071917
+      *                                    *                            00072017
+      *  CUERPO INICIO APERTURA ARCHIVOS   *                            00072117
+      *                                    *                            00072217
+      **************************************                            00072317
+       1000-I-INICIO.                                                   00072417
+                                                                        00072599
+           SET WS-NO-FIN-LECTURA       TO TRUE.                         00072699
+           SET WS-NO-FIN-SQL           TO TRUE.                         00072799
+                                                                        00074000
+       1000-F-INICIO.   EXIT.                                           00079300
+                                                                        00079400
+      **************************************                            00079500
+      *                                    *                            00079600
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00079700
+      *                                    *                            00079800
+      **************************************                            00079900
+       2000-I-PROCESO.                                                  00080000
+                                                                        00080153
+           PERFORM 2100-I-LECTURA THRU                                  00081099
+                   2200-F-UPDATE  UNTIL WS-FIN-LECTURA.                 00085199
+                                                                        00085221
+       2000-F-PROCESO. EXIT.                                            00086505
+                                                                        00086605
+       2100-I-LECTURA.                                                  00086799
+                                                                        00086899
+           DISPLAY 'INICIO-LECTURA'                                     00086999
+           EXEC SQL                                                     00087099
+             SELECT A.TIPCUEN, A.NROCUEN, A.SUCUEN,                     00087199
+             B.NOMAPE, B.TIPDOC , B.NRODOC                              00088099
+              INTO :WT-TIPCUEN,                                         00088199
+                   :WT-NROCUEN,                                         00088299
+                   :WT-SUCUEN,                                          00088399
+                   :WD-NOMAPE,                                          00088499
+                   :WD-TIPDOC,                                          00088599
+                   :WD-NRODOC                                           00088699
+             FROM ITPLZRY.TB99CUEN A                                    00088899
+             RIGHT JOIN                                                 00088999
+             ITPLZRY.TB99CLIE B                                         00089099
+             ON A.NROCLI = B.NROCLI                                     00089199
+             WHERE A.NROCLI = 512                                       00089299
+             AND A.SUCUEN = 1                                           00089399
+             FETCH FIRST ROW ONLY                                       00089499
+           END-EXEC.                                                    00089599
+                                                                        00089699
+           EVALUATE TRUE                                                00090399
+             WHEN SQLCODE EQUAL 0                                       00090699
+                CONTINUE                                                00090799
+             WHEN OTHER                                                 00090899
+                MOVE SQLCODE           TO WS-SQLCODE                    00090999
+                DISPLAY 'ERROR EN SELECT1  : '   WS-SQLCODE             00091099
+                SET WS-FIN-LECTURA     TO TRUE                          00091199
+           END-EVALUATE.                                                00091299
+                                                                        00092017
+       2100-F-LECTURA. EXIT.                                            00092499
+                                                                        00093017
+       2200-I-UPDATE.                                                   00093199
+                                                                        00093299
+           EXEC SQL                                                     00094099
+             UPDATE ITPLZRY.TB99CUEN                                    00095099
+             SET NROCLI = 99                                            00096099
+             WHERE TIPCUEN = :WT-TIPCUEN AND NROCUEN = :WT-NROCUEN      00096199
+           END-EXEC.                                                    00096299
+                                                                        00096917
+           EVALUATE TRUE                                                00097099
+             WHEN SQLCODE EQUAL 0                                       00097199
+             CONTINUE                                                   00097299
+               SET WS-FIN-LECTURA TO TRUE                               00097399
+             WHEN OTHER                                                 00097499
+               SET WS-FIN-SQL TO TRUE                                   00097599
+                MOVE SQLCODE           TO WS-SQLCODE                    00097799
+                DISPLAY 'ERROR EN SELECT2  : '   WS-SQLCODE             00097899
+                SET WS-FIN-LECTURA     TO TRUE                          00097999
+           END-EVALUATE.                                                00098099
+                                                                        00098199
+           EXEC SQL                                                     00098299
+             UPDATE ITPLZRY.TB99CLIE                                    00098399
+             SET NROCLI = 99                                            00098499
+             WHERE TIPDOC = :WD-TIPDOC AND NRODOC = :WD-NRODOC          00098599
+           END-EXEC.                                                    00098699
+                                                                        00098799
+           EVALUATE TRUE                                                00098899
+             WHEN SQLCODE EQUAL ZEROS                                   00098999
+               SET WS-FIN-LECTURA TO TRUE                               00099199
+             WHEN OTHER                                                 00099299
+               SET WS-FIN-SQL TO TRUE                                   00099399
+                MOVE SQLCODE           TO WS-SQLCODE                    00100399
+                DISPLAY 'ERROR EN SELECT3  : '   WS-SQLCODE             00100499
+                SET WS-FIN-LECTURA     TO TRUE                          00100599
+           END-EVALUATE.                                                00100699
+                                                                        00100799
+       2200-F-UPDATE. EXIT.                                             00101099
+                                                                        00102099
+      **************************************                            00111217
+      *                                    *                            00111317
+      *  CUERPO FINAL CIERRE DE FILES      *                            00111417
+      *                                    *                            00111517
+      **************************************                            00111617
+                                                                        00111799
+       9999-I-FINAL.                                                    00111899
+                                                                        00111999
+           IF WS-FIN-SQL                                                00112399
+             DISPLAY 'FIN PROGRAMA ERRONEO'                             00112499
+             EXEC SQL                                                   00112599
+               ROLLBACK                                                 00112699
+             END-EXEC                                                   00112799
+             ELSE                                                       00112899
+           DISPLAY 'FIN PROGRAMA EXITOSO'                               00112999
+           END-IF.                                                      00113199
+                                                                        00113217
+       9999-F-FINAL.                                                    00113317
+           EXIT.                                                        00114017
+      *                                                                 00120017

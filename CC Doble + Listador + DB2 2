@@ -1,0 +1,567 @@
+       CBL TEST                                                         00001000
+       IDENTIFICATION DIVISION.                                         00002000
+      *                                                        *        00003000
+       PROGRAM-ID PGMDB251.                                             00004099
+      **********************************************************        00016800
+      *      EJERCICIO 42                                      *        00016999
+      **********************************************************        00017000
+      *  FECHA   *    DETALLE        * COD *                            00018000
+      **************************************                            00019000
+      *          *                   *     *                            00019100
+      *14/11/2022*COMIENZO EJERCICIO *     *                            00019299
+      *          *                   *     *                            00019321
+      **************************************                            00019400
+       ENVIRONMENT DIVISION.                                            00019500
+       CONFIGURATION SECTION.                                           00019600
+       SPECIAL-NAMES.                                                   00019700
+           DECIMAL-POINT IS COMMA.                                      00019800
+                                                                        00019900
+       INPUT-OUTPUT SECTION.                                            00020000
+       FILE-CONTROL.                                                    00020100
+                                                                        00020299
+             SELECT SALIDA  ASSIGN DDSALE                               00023299
+             FILE STATUS IS WS-FS-SAL.                                  00023399
+                                                                        00023499
+       DATA DIVISION.                                                   00023500
+       FILE SECTION.                                                    00023600
+                                                                        00023799
+       FD SALIDA                                                        00026099
+             BLOCK CONTAINS 0 RECORDS                                   00027099
+             RECORDING MODE IS F.                                       00028099
+                                                                        00029099
+       01 REG-SALIDA      PIC X(132).                                   00030099
+                                                                        00040099
+      **************************************                            00041100
+       WORKING-STORAGE SECTION.                                         00041200
+      **************************************                            00041307
+                                                                        00041499
+      *FILE STATUS ARCHIVOS Y TABLAS                                    00041599
+       77  WS-FS-SAL           PIC XX                   VALUE SPACES.   00041799
+       77  WS-SQLCODE          PIC +++999 USAGE DISPLAY VALUE ZEROES.   00041899
+                                                                        00041999
+      *CONTADORES                                                       00042099
+       77  WS-CUENTA-LINEA     PIC 99                   VALUE ZEROES.   00042199
+       77  WS-CUENTA-PAGINA    PIC 99                   VALUE ZEROES.   00042299
+       77  WS-CONT-SUC         PIC 9(3)                 VALUE ZEROES.   00042499
+       77  WS-CONT-TIP         PIC 9(3)                 VALUE ZEROES.   00042599
+       77  WS-IMPRIMIR         PIC X(132)               VALUE ZEROES.   00042699
+                                                                        00042799
+      *ACUMUALDORES Y COMPARADORES                                      00042899
+       77  WS-SUC-ANT          PIC 9(2)                 VALUE ZEROES.   00042999
+       77  WS-TIP-ANT          PIC X(2)                 VALUE ZEROES.   00043099
+       77  WS-SALDO-ACUM       PIC S9(15)V99            VALUE ZEROES.   00043199
+       77  WS-SALDO-SUC        PIC S9(15)V99            VALUE ZEROES.   00043299
+       77  WS-SALDO-TIP        PIC S9(15)V99            VALUE ZEROES.   00044099
+                                                                        00044299
+      *FIN DE LECTURA PROGRAMA                                          00044631
+       01  WS-STATUS-FIN       PIC X.                                   00044799
+           88  WS-FIN-LECTURA                           VALUE 'Y'.      00044899
+           88  WS-NO-FIN-LECTURA                        VALUE 'N'.      00045099
+                                                                        00052800
+      *ESTRUCTURAS PARA IMPRESION                                       00065999
+                                                                        00066099
+       01 WS-TIT-PAG.                                                   00066199
+          03 FILLER                PIC X(15)    VALUE "PAGINA NUMERO: ".00066299
+          03 WS-PAGINA-D           PIC Z9       VALUE ZEROS.            00066399
+                                                                        00066499
+      *ESTRUCTURA TITULO                                                00066599
+       01 WS-TITULO.                                                    00066699
+           03 FILLER         PIC X(01) VALUE '|'.                       00066799
+           03 FILLER         PIC X(08) VALUE 'SUCURSAL'.                00066999
+           03 FILLER         PIC X(01) VALUE '|'.                       00067199
+           03 FILLER         PIC X(08) VALUE 'TIPO CTA'.                00067399
+           03 FILLER         PIC X(01) VALUE '|'.                       00067599
+           03 FILLER         PIC X(08) VALUE 'TIPO DOC'.                00067799
+           03 FILLER         PIC X(01) VALUE '|'.                       00067999
+           03 FILLER         PIC X(13) VALUE 'NRO DOCUMENTO'.           00068199
+           03 FILLER         PIC X(01) VALUE '|'.                       00068399
+           03 FILLER         PIC X(08) VALUE SPACES.                    00068499
+           03 FILLER         PIC X(14) VALUE 'NOMBRE CLIENTE'.          00068599
+           03 FILLER         PIC X(08) VALUE SPACES.                    00068699
+           03 FILLER         PIC X(01) VALUE '|'.                       00068799
+           03 FILLER         PIC X(07) VALUE 'NRO CLI'.                 00068999
+           03 FILLER         PIC X(01) VALUE '|'.                       00069199
+           03 FILLER         PIC X(07) VALUE 'NRO CTA'.                 00069399
+           03 FILLER         PIC X(01) VALUE '|'.                       00069599
+           03 FILLER         PIC X(07) VALUE SPACES.                    00069699
+           03 FILLER         PIC X(05) VALUE 'SALDO'.                   00069799
+           03 FILLER         PIC X(08) VALUE SPACES.                    00069899
+           03 FILLER         PIC X(01) VALUE '|'.                       00069999
+                                                                        00070099
+      *ESTRUCTURA DETALLE DEL CLIENTE                                   00070199
+       01 WS-DETALLE.                                                   00070299
+           03 FILLER         PIC X(01) VALUE '|'.                       00070399
+           03 FILLER         PIC X(03) VALUE SPACES.                    00070499
+           03 WS-D-SUCUEN    PIC Z9    VALUE ZEROES.                    00070599
+           03 FILLER         PIC X(03) VALUE SPACES.                    00070699
+           03 FILLER         PIC X(01) VALUE '|'.                       00070799
+           03 FILLER         PIC X(03) VALUE SPACES.                    00070899
+           03 WS-D-TIPCUEN   PIC Z9    VALUE ZEROES.                    00070999
+           03 FILLER         PIC X(03) VALUE SPACES.                    00071099
+           03 FILLER         PIC X(01) VALUE '|'.                       00071199
+           03 WS-D-TIPDOC    PIC X(08) VALUE SPACES.                    00071399
+           03 FILLER         PIC X(01) VALUE '|'.                       00071599
+           03 WS-D-NRODOC    PIC Z(12)9 VALUE ZEROES.                   00071799
+           03 FILLER         PIC X(01) VALUE '|'.                       00071999
+           03 WS-D-NOMAPE    PIC X(30) VALUE SPACES.                    00072199
+           03 FILLER         PIC X(01) VALUE '|'.                       00072399
+           03 FILLER         PIC X(02) VALUE SPACES.                    00072499
+           03 WS-D-NROCLI    PIC ZZ9   VALUE ZEROES.                    00072599
+           03 FILLER         PIC X(02) VALUE SPACES.                    00072699
+           03 FILLER         PIC X(01) VALUE '|'.                       00072799
+           03 FILLER         PIC X(02) VALUE SPACES.                    00072899
+           03 WS-D-NROCUEN   PIC Z9    VALUE ZEROES.                    00072999
+           03 FILLER         PIC X(03) VALUE SPACES.                    00073099
+           03 FILLER         PIC X(01) VALUE '|'.                       00073199
+           03 WS-D-SALDO     PIC Z(13)9(03),99- VALUE ZEROES.           00073399
+           03 FILLER         PIC X(01) VALUE '|'.                       00073599
+                                                                        00073699
+      *ESTRUCTURA ESPACIO                                               00073799
+       01 WS-ESPACIO.                                                   00073899
+           03 FILLER         PIC X(99) VALUE SPACES.                    00073999
+                                                                        00074099
+      *ESTRUCTURA SUBTITULOS                                            00074199
+      *DETALLE SUCURSAL                                                 00074299
+       01 WS-DET-SUC.                                                   00074399
+           03 FILLER         PIC X(01) VALUE '|'.                       00074499
+           03 FILLER         PIC X(16) VALUE 'SUCURSAL NRO : '.         00074599
+           03 WS-SUC         PIC X(02) VALUE SPACES.                    00074699
+           03 FILLER         PIC X(90) VALUE SPACES.                    00074799
+           03 FILLER         PIC X(01) VALUE '|'.                       00074899
+                                                                        00074999
+      *DETALLE TIPO                                                     00075099
+       01 WS-DET-TIP.                                                   00075199
+           03 FILLER         PIC X(01) VALUE '|'.                       00075299
+           03 FILLER         PIC X(21) VALUE 'TIPO DE CUENTA NRO : '.   00075399
+           03 WS-TIP         PIC X(02) VALUE SPACES.                    00075499
+           03 FILLER         PIC X(85) VALUE SPACES.                    00075599
+           03 FILLER         PIC X(01) VALUE '|'.                       00075699
+                                                                        00075799
+      *TIPO                                                             00075899
+       01 WS-SUB-TIP.                                                   00075999
+           03 FILLER         PIC X(01) VALUE '|'.                       00076099
+           03 FILLER         PIC X(05) VALUE SPACES.                    00076199
+           03 FILLER         PIC X(01) VALUE '|'.                       00076299
+           03 FILLER         PIC X(18) VALUE                            00076399
+                        'CANT CTAS TIPO : '.                            00076499
+           03 WS-TIT-TIP     PIC ZZ9   VALUE ZEROES.                    00076599
+           03 FILLER         PIC X(01) VALUE SPACES.                    00076699
+           03 FILLER         PIC X(01) VALUE '='.                       00076799
+           03 WS-CANT-TIP    PIC ZZ9   VALUE ZEROES.                    00076899
+           03 FILLER         PIC X(01) VALUE SPACES.                    00076999
+           03 FILLER         PIC X(01) VALUE '|'.                       00077099
+           03 FILLER         PIC X(14) VALUE 'TOTAL SALDOS: '.          00077199
+           03 WS-SAL-TIP     PIC Z(13)9(03),99- VALUE ZEROES.           00077299
+           03 FILLER         PIC X(40) VALUE SPACES.                    00077399
+           03 FILLER         PIC X(01) VALUE '|'.                       00077499
+                                                                        00077599
+      *SUCURSAL                                                         00077699
+       01 WS-SUB-SUC.                                                   00077799
+           03 FILLER         PIC X(01) VALUE '|'.                       00077899
+           03 FILLER         PIC X(16) VALUE SPACES.                    00077999
+           03 FILLER         PIC X(01) VALUE '|'.                       00078099
+           03 FILLER         PIC X(26) VALUE                            00078199
+                        'CANT CTAS DE SUCURSAL : '.                     00078299
+           03 WS-TIT-SUC     PIC ZZ9   VALUE ZEROES.                    00078399
+           03 FILLER         PIC X(01) VALUE SPACES.                    00078499
+           03 FILLER         PIC X(01) VALUE '='.                       00078599
+           03 WS-CANT-SUC    PIC ZZ.999 VALUE ZEROES.                   00078699
+           03 FILLER         PIC X(01) VALUE SPACES.                    00078799
+           03 FILLER         PIC X(01) VALUE '|'.                       00078899
+           03 FILLER         PIC X(14) VALUE 'TOTAL SALDOS: '.          00078999
+           03 WS-SAL-SUC     PIC Z(13)9(03),99- VALUE ZEROES.           00079099
+           03 FILLER         PIC X(18) VALUE SPACES.                    00079199
+           03 FILLER         PIC X(01) VALUE '|'.                       00079299
+                                                                        00079399
+      * INCLUDE PARA SQL                                                00079517
+                                                                        00079617
+            EXEC SQL                                                    00079717
+              INCLUDE SQLCA                                             00079817
+            END-EXEC.                                                   00079917
+                                                                        00080056
+            EXEC SQL                                                    00080199
+              INCLUDE TBCURCLI                                          00080299
+            END-EXEC.                                                   00080399
+                                                                        00080499
+            EXEC SQL                                                    00080599
+              INCLUDE TBCURCTA                                          00080699
+            END-EXEC.                                                   00080799
+                                                                        00080899
+            EXEC SQL                                                    00080999
+              DECLARE ITEM_CURSOR  CURSOR                               00081099
+              FOR                                                       00081199
+              SELECT                                                    00081299
+                   A.SUCUEN,                                            00081399
+                   A.TIPCUEN,                                           00081499
+                   B.TIPDOC,                                            00081599
+                   B.NRODOC,                                            00081699
+                   B.NOMAPE,                                            00081799
+                   A.NROCLI,                                            00081899
+                   A.NROCUEN,                                           00081999
+                   A.SALDO                                              00082099
+                   FROM ITPARUT.TBCURCTA A                              00082199
+                   INNER JOIN                                           00082299
+                   ITPARUT.TBCURCLI B                                   00082399
+                   ON A.NROCLI = B.NROCLI                               00082499
+                   WHERE B.NROCLI IS NOT NULL                           00082599
+                   ORDER BY A.SUCUEN ASC,                               00082699
+                   A.TIPCUEN ASC                                        00082799
+            END-EXEC.                                                   00082899
+                                                                        00082999
+      ***************************************************************.  00083017
+       PROCEDURE DIVISION.                                              00083199
+      **************************************                            00083217
+      *                                    *                            00083317
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00083417
+      *                                    *                            00083517
+      **************************************                            00083617
+       MAIN-PROGRAM.                                                    00083717
+                                                                        00083817
+           PERFORM 1000-I-INICIO   THRU                                 00083917
+                   1000-F-INICIO.                                       00084017
+                                                                        00084117
+           PERFORM 2000-I-PROCESO  THRU                                 00084299
+                   2000-F-PROCESO    UNTIL WS-FIN-LECTURA.              00084399
+                                                                        00084417
+           PERFORM 9999-I-FINAL    THRU                                 00084517
+                   9999-F-FINAL.                                        00084617
+                                                                        00084717
+       F-MAIN-PROGRAM. GOBACK.                                          00084817
+                                                                        00084917
+      **************************************                            00085017
+      *                                    *                            00085117
+      *  CUERPO INICIO APERTURA ARCHIVOS   *                            00085217
+      *                                    *                            00085317
+      **************************************                            00085417
+       1000-I-INICIO.                                                   00085517
+                                                                        00085699
+           SET WS-NO-FIN-LECTURA       TO TRUE.                         00085799
+           INITIALIZE                     WS-CUENTA-LINEA               00085999
+                                          WS-CONT-SUC                   00086099
+                                          WS-CONT-TIP                   00086199
+                                          WS-SUC-ANT                    00086299
+                                          WS-TIP-ANT                    00086399
+                                          WS-SALDO-ACUM                 00086499
+                                          WS-SALDO-TIP                  00086599
+                                          WS-SALDO-SUC                  00086699
+                                                                        00086799
+           OPEN OUTPUT SALIDA.                                          00086899
+           IF WS-FS-SAL    IS NOT EQUAL '00'                            00086999
+              DISPLAY '* ERROR EN OPEN SALIDA = ' WS-FS-SAL             00087099
+              SET  WS-FIN-LECTURA TO TRUE                               00087199
+           END-IF.                                                      00087299
+                                                                        00087399
+      * OPEN CURSOR                                                     00087499
+           EXEC SQL                                                     00087599
+              OPEN ITEM_CURSOR                                          00087699
+           END-EXEC.                                                    00087799
+                                                                        00087899
+           IF SQLCODE NOT EQUAL ZEROS                                   00087999
+              MOVE SQLCODE   TO WS-SQLCODE                              00088099
+              DISPLAY '* ERROR OPEN CURSOR      = ' WS-SQLCODE          00088199
+              SET  WS-FIN-LECTURA TO TRUE                               00088299
+           END-IF.                                                      00088399
+                                                                        00090599
+      *LEO EL PRIMER REGISTRO PARA PODER COMPARAR                       00090699
+           EXEC SQL                                                     00090799
+              FETCH ITEM_CURSOR                                         00090899
+              INTO :WT-SUCUEN,                                          00090999
+                   :WT-TIPCUEN,                                         00091099
+                   :WD-TIPDOC,                                          00091199
+                   :WD-NRODOC,                                          00091299
+                   :WD-NOMAPE,                                          00091399
+                   :WD-NROCLI,                                          00091499
+                   :WT-NROCUEN,                                         00091599
+                   :WT-SALDO                                            00091699
+           END-EXEC.                                                    00091799
+                                                                        00091899
+           MOVE SQLCODE  TO WS-SQLCODE                                  00091999
+                                                                        00092099
+           EVALUATE TRUE                                                00092199
+             WHEN SQLCODE EQUAL ZEROS                                   00092299
+                MOVE WT-SUCUEN  TO WS-SUC-ANT                           00092599
+                MOVE WT-TIPCUEN TO WS-TIP-ANT                           00092699
+                ADD 1           TO WS-CONT-TIP                          00092799
+                ADD WT-SALDO            TO WS-SALDO-TIP                 00092899
+                ADD 1 TO WS-CUENTA-PAGINA                               00092999
+                MOVE WS-CUENTA-PAGINA TO WS-PAGINA-D                    00093099
+                WRITE REG-SALIDA FROM WS-TIT-PAG AFTER PAGE             00094099
+                 IF WS-FS-SAL IS NOT EQUAL '00'                         00094199
+                   DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL    00094299
+                   SET WS-FIN-LECTURA TO TRUE                           00094399
+                 END-IF                                                 00094499
+                 ADD 2 TO WS-CUENTA-LINEA                               00094599
+                 MOVE WT-SUCUEN TO WS-SUC                               00095399
+                 MOVE WS-DET-SUC TO WS-IMPRIMIR                         00095499
+                 PERFORM 6600-I-IMPRIMIR THRU                           00095599
+                         6600-F-IMPRIMIR                                00095699
+                 MOVE WT-TIPCUEN TO WS-TIP                              00095799
+                 MOVE WS-DET-TIP TO WS-IMPRIMIR                         00095899
+                 PERFORM 6600-I-IMPRIMIR THRU                           00095999
+                         6600-F-IMPRIMIR                                00096099
+                 PERFORM 6300-I-TITULO THRU                             00096199
+                         6300-F-TITULO                                  00096299
+                 PERFORM 6500-I-DETALLE   THRU                          00096399
+                         6500-F-DETALLE                                 00096499
+                                                                        00096699
+             WHEN SQLCODE EQUAL +100                                    00096799
+                SET WS-FIN-LECTURA TO TRUE                              00096899
+                EXEC SQL                                                00096999
+                   CLOSE ITEM_CURSOR                                    00097099
+                END-EXEC                                                00097199
+                IF SQLCODE NOT EQUAL ZEROS                              00097299
+                   MOVE SQLCODE  TO WS-SQLCODE                          00097399
+                   DISPLAY '* ERROR CLOSE CURSOR      = ' WS-SQLCODE    00097499
+                END-IF                                                  00097599
+                                                                        00097699
+             WHEN OTHER                                                 00097799
+                MOVE SQLCODE  TO WS-SQLCODE                             00097899
+                DISPLAY 'ERROR FETCH CURSOR: '   WS-SQLCODE             00097999
+                SET WS-FIN-LECTURA TO TRUE                              00098099
+           END-EVALUATE.                                                00098199
+                                                                        00098299
+       1000-F-INICIO.   EXIT.                                           00098300
+                                                                        00098400
+      **************************************                            00098500
+      *                                    *                            00098600
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00098700
+      *                                    *                            00098800
+      **************************************                            00098900
+       2000-I-PROCESO.                                                  00099099
+                                                                        00099199
+      *LEO UN NUEVO REGISTRO PARA PODER REALIZAR EL CORTE               00100099
+                                                                        00100799
+           EXEC SQL                                                     00100899
+              FETCH ITEM_CURSOR                                         00100999
+              INTO :WT-SUCUEN,                                          00101099
+                   :WT-TIPCUEN,                                         00101199
+                   :WD-TIPDOC,                                          00101299
+                   :WD-NRODOC,                                          00101399
+                   :WD-NOMAPE,                                          00101499
+                   :WD-NROCLI,                                          00101599
+                   :WT-NROCUEN,                                         00101699
+                   :WT-SALDO                                            00101799
+           END-EXEC.                                                    00101899
+                                                                        00101999
+           MOVE SQLCODE  TO WS-SQLCODE                                  00102099
+                                                                        00102199
+           EVALUATE TRUE                                                00102299
+             WHEN SQLCODE EQUAL ZEROS                                   00102399
+                PERFORM 2050-I-PORQUERIA THRU                           00102899
+                        2050-F-PORQUERIA                                00102999
+                                                                        00103099
+             WHEN SQLCODE EQUAL +100                                    00103199
+                PERFORM 6550-I-ULTIMO  THRU                             00103299
+                        6550-F-ULTIMO                                   00103399
+                EXEC SQL                                                00106699
+                   CLOSE ITEM_CURSOR                                    00106799
+                END-EXEC                                                00106899
+                IF SQLCODE NOT EQUAL ZEROS                              00106999
+                   MOVE SQLCODE  TO WS-SQLCODE                          00107099
+                   DISPLAY '* ERROR CLOSE CURSOR      = ' WS-SQLCODE    00107199
+                   MOVE 9999 TO RETURN-CODE                             00107299
+                END-IF                                                  00107399
+                                                                        00107499
+             WHEN OTHER                                                 00107599
+                MOVE SQLCODE  TO WS-SQLCODE                             00107699
+                DISPLAY 'ERROR FETCH CURSOR: '   WS-SQLCODE             00107799
+                SET WS-FIN-LECTURA TO TRUE                              00107899
+           END-EVALUATE.                                                00107999
+                                                                        00108099
+       2000-F-PROCESO. EXIT.                                            00108199
+                                                                        00108299
+       2050-I-PORQUERIA.                                                00108399
+                                                                        00108499
+              IF WS-SUC-ANT EQUAL WT-SUCUEN                             00109799
+               IF WS-TIP-ANT EQUAL WT-TIPCUEN                           00110299
+                 CONTINUE                                               00110499
+               ELSE                                                     00110599
+      *CAMBIO DEL CORTE MENOR                                           00110699
+                   PERFORM 2350-I-CORTETIPCU THRU                       00110799
+                           2350-F-CORTETIPCU                            00110899
+               END-IF                                                   00110999
+              ELSE                                                      00111099
+      *CAMBIO DEL CORTE MEDIO SE EJECUTA CORTE MENOR Y DESPUES MAYOR    00111199
+                   PERFORM 2350-I-CORTETIPCU THRU                       00111299
+                           2350-F-CORTETIPCU                            00111399
+                   PERFORM 2450-I-CORTESUCUR THRU                       00111499
+                           2450-F-CORTESUCUR                            00111599
+              END-IF                                                    00111699
+                                                                        00111799
+                    ADD WT-SALDO            TO WS-SALDO-TIP             00116099
+                    ADD 1                   TO WS-CONT-TIP.             00117099
+                 PERFORM 6500-I-DETALLE   THRU                          00117199
+                         6500-F-DETALLE.                                00117299
+                                                                        00118099
+       2050-F-PORQUERIA. EXIT.                                          00120099
+                                                                        00121099
+       2350-I-CORTETIPCU.                                               00130099
+                                                                        00131099
+      *CORTE MENOR POR TIPO DE CUENTA                                   00132099
+           MOVE WS-TIP-ANT                TO WS-TIT-TIP                 00133099
+           MOVE WS-CONT-TIP               TO WS-CANT-TIP                00134099
+           MOVE WS-SALDO-TIP              TO WS-SAL-TIP                 00135099
+           MOVE WT-TIPCUEN                TO WS-TIP-ANT                 00136099
+           ADD  WS-SALDO-TIP              TO WS-SALDO-SUC               00137099
+           MOVE ZEROES TO WS-SALDO-TIP                                  00138099
+           ADD  WS-CONT-TIP               TO WS-CONT-SUC                00139099
+           MOVE ZEROES TO WS-CONT-TIP                                   00140099
+                MOVE WT-TIPCUEN TO WS-TIP-ANT.                          00141599
+           MOVE WS-SUB-TIP TO WS-IMPRIMIR                               00141699
+                                                                        00141799
+           PERFORM 6600-I-IMPRIMIR THRU                                 00141899
+                   6600-F-IMPRIMIR.                                     00141999
+           IF WS-SUC-ANT EQUAL WT-SUCUEN                                00142099
+              MOVE WT-TIPCUEN TO WS-TIP                                 00142299
+              MOVE WS-DET-TIP TO WS-IMPRIMIR                            00142399
+              PERFORM 6600-I-IMPRIMIR THRU                              00142499
+                      6600-F-IMPRIMIR                                   00142599
+           END-IF.                                                      00142699
+                                                                        00142799
+       2350-F-CORTETIPCU. EXIT.                                         00142899
+                                                                        00142999
+       2450-I-CORTESUCUR.                                               00143099
+                                                                        00143399
+      *CORTE MAYOR POR SUCURSAL                                         00143499
+           MOVE WS-SUC-ANT                TO WS-TIT-SUC                 00143599
+           MOVE WS-CONT-SUC               TO WS-CANT-SUC                00143699
+           MOVE WS-SALDO-SUC              TO WS-SAL-SUC                 00143799
+           MOVE WT-SUCUEN                 TO WS-SUC-ANT                 00143899
+           MOVE ZEROES TO WS-SALDO-SUC                                  00144099
+           MOVE ZEROES TO WS-CONT-SUC                                   00145199
+           MOVE WS-SUB-SUC TO WS-IMPRIMIR                               00145299
+                                                                        00145399
+           PERFORM 6600-I-IMPRIMIR THRU                                 00145499
+                   6600-F-IMPRIMIR                                      00145599
+                                                                        00145699
+           MOVE WT-SUCUEN  TO WS-SUC                                    00145799
+           MOVE WS-DET-SUC TO WS-IMPRIMIR                               00145899
+           PERFORM 6600-I-IMPRIMIR THRU                                 00145999
+                   6600-F-IMPRIMIR.                                     00146099
+                                                                        00146199
+           MOVE WT-TIPCUEN TO WS-TIP                                    00146299
+           MOVE WS-DET-TIP TO WS-IMPRIMIR                               00146399
+           PERFORM 6600-I-IMPRIMIR THRU                                 00146499
+                   6600-F-IMPRIMIR                                      00146599
+                                                                        00146699
+           PERFORM 6300-I-TITULO  THRU                                  00146799
+                   6300-F-TITULO                                        00146899
+                MOVE WT-SUCUEN  TO WS-SUC-ANT                           00146999
+                MOVE WT-TIPCUEN TO WS-TIP-ANT.                          00147099
+                                                                        00147199
+       2450-F-CORTESUCUR. EXIT.                                         00147299
+                                                                        00147399
+       6300-I-TITULO.                                                   00147499
+                                                                        00147599
+      *IMPRESION DEL TITULO                                             00147699
+           ADD  1   TO WS-CUENTA-LINEA                                  00147799
+           MOVE WS-TITULO  TO WS-IMPRIMIR                               00147899
+                                                                        00147999
+           PERFORM 6600-I-IMPRIMIR THRU                                 00148099
+                   6600-F-IMPRIMIR.                                     00148199
+                                                                        00148299
+       6300-F-TITULO. EXIT.                                             00148399
+                                                                        00148499
+       6500-I-DETALLE.                                                  00148599
+                                                                        00148699
+      *IMPRESION DEL DETALLE                                            00148799
+           MOVE WT-SUCUEN                 TO WS-D-SUCUEN                00148899
+           MOVE WT-TIPCUEN                TO WS-D-TIPCUEN               00148999
+           MOVE WD-TIPDOC                 TO WS-D-TIPDOC                00149099
+           MOVE WD-NRODOC                 TO WS-D-NRODOC                00149199
+           MOVE WD-NOMAPE                 TO WS-D-NOMAPE                00149299
+           MOVE WD-NROCLI                 TO WS-D-NROCLI                00149399
+           MOVE WT-NROCUEN                TO WS-D-NROCUEN               00149499
+           MOVE WT-SALDO                  TO WS-D-SALDO                 00149599
+           MOVE WS-DETALLE TO WS-IMPRIMIR                               00149699
+                                                                        00149799
+           PERFORM 6600-I-IMPRIMIR THRU                                 00149899
+                   6600-F-IMPRIMIR.                                     00150199
+                                                                        00150299
+       6500-F-DETALLE. EXIT.                                            00150399
+                                                                        00150499
+       6550-I-ULTIMO.                                                   00150599
+                                                                        00150699
+           SET WS-FIN-LECTURA TO TRUE                                   00150799
+           MOVE WS-TIP-ANT                TO WS-TIT-TIP                 00150899
+           MOVE WS-CONT-TIP               TO WS-CANT-TIP                00150999
+           MOVE WS-SALDO-TIP              TO WS-SAL-TIP                 00151099
+           MOVE WT-TIPCUEN                TO WS-TIP-ANT                 00151199
+           ADD  WS-SALDO-TIP              TO WS-SALDO-SUC               00151299
+           MOVE ZEROES TO WS-SALDO-TIP                                  00151399
+           ADD  WS-CONT-TIP               TO WS-CONT-SUC                00151499
+           MOVE ZEROES TO WS-CONT-TIP                                   00151599
+                MOVE WT-TIPCUEN TO WS-TIP-ANT.                          00151699
+           MOVE WS-SUB-TIP TO WS-IMPRIMIR                               00151799
+                                                                        00151899
+           PERFORM 6600-I-IMPRIMIR THRU                                 00151999
+                   6600-F-IMPRIMIR.                                     00152099
+                                                                        00152199
+           MOVE WS-SUC-ANT                TO WS-TIT-SUC                 00152299
+           MOVE WS-CONT-SUC               TO WS-CANT-SUC                00152399
+           MOVE WS-SALDO-SUC              TO WS-SAL-SUC                 00152499
+           MOVE WT-SUCUEN                 TO WS-SUC-ANT                 00152599
+           MOVE ZEROES TO WS-SALDO-SUC                                  00152699
+           MOVE ZEROES TO WS-CONT-SUC                                   00152799
+           MOVE WS-SUB-SUC TO WS-IMPRIMIR                               00152899
+                                                                        00152999
+           PERFORM 6600-I-IMPRIMIR THRU                                 00153099
+                   6600-F-IMPRIMIR.                                     00153199
+                                                                        00153299
+       6550-F-ULTIMO.                                                   00153399
+                                                                        00153499
+       6600-I-IMPRIMIR.                                                 00153599
+                                                                        00153699
+           IF WS-CUENTA-LINEA GREATER THAN 30 THEN                      00153799
+              ADD 1 TO WS-CUENTA-PAGINA                                 00153899
+              MOVE WS-CUENTA-PAGINA TO WS-PAGINA-D                      00153999
+              WRITE REG-SALIDA FROM WS-TIT-PAG AFTER PAGE               00154099
+               IF WS-FS-SAL IS NOT EQUAL '00'                           00154199
+                 DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL      00154299
+                 SET WS-FIN-LECTURA TO TRUE                             00154399
+              END-IF                                                    00154499
+              WRITE REG-SALIDA FROM WS-ESPACIO                          00154599
+               IF WS-FS-SAL IS NOT EQUAL '00'                           00154699
+                 DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL      00154799
+                 SET WS-FIN-LECTURA TO TRUE                             00154899
+              END-IF                                                    00154999
+              WRITE REG-SALIDA FROM WS-TITULO                           00155099
+               IF WS-FS-SAL IS NOT EQUAL '00'                           00155199
+                 DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL      00155299
+                 SET WS-FIN-LECTURA TO TRUE                             00155399
+              END-IF                                                    00155499
+              MOVE ZEROES TO WS-CUENTA-LINEA                            00155599
+              ADD 3 TO WS-CUENTA-LINEA                                  00155699
+           END-IF                                                       00155799
+                                                                        00155899
+           WRITE REG-SALIDA FROM WS-IMPRIMIR AFTER 1                    00155999
+              IF WS-FS-SAL IS NOT EQUAL '00'                            00156099
+                DISPLAY '* ERROR EN WRITE IMPRESION = ' WS-FS-SAL       00156199
+                SET WS-FIN-LECTURA TO TRUE                              00156299
+             END-IF                                                     00156399
+                                                                        00156499
+           ADD 1 TO WS-CUENTA-LINEA                                     00156599
+                                                                        00156699
+           INITIALIZE WS-IMPRIMIR.                                      00156799
+                                                                        00156899
+       6600-F-IMPRIMIR. EXIT.                                           00156999
+                                                                        00157099
+      **************************************                            00159099
+      *                                    *                            00159199
+      *  CUERPO FINAL CIERRE DE FILES      *                            00159299
+      *                                    *                            00159399
+      **************************************                            00159499
+                                                                        00159599
+       9999-I-FINAL.                                                    00159699
+                                                                        00159799
+                EXEC SQL                                                00159899
+                  ROLLBACK                                              00159999
+                END-EXEC                                                00160099
+                                                                        00160199
+           CLOSE SALIDA                                                 00160299
+              IF WS-FS-SAL  IS NOT EQUAL '00'                           00160399
+                DISPLAY '* ERROR EN CLOSE SALIDA  = '                   00160499
+                                            WS-FS-SAL                   00160599
+             END-IF.                                                    00160699
+       9999-F-FINAL.                                                    00161099
+           EXIT.                                                        00170017

@@ -1,0 +1,201 @@
+       IDENTIFICATION DIVISION.                                         00010029
+        PROGRAM-ID PGMCO551.                                            00020099
+      **************************************                            00040029
+      *      PROGRAMA DE EJERCICIO 24      *                            00050099
+      **************************************                            00060029
+      *  FECHA   *    DETALLE        * COD *                            00070029
+      **************************************                            00080029
+      *          *                   *     *                            00090029
+      * 13-10-22 * EJERCICIO EXTRA   *     *                            00100099
+      *          *                   *     *                            00110029
+      **************************************                            00120029
+       ENVIRONMENT DIVISION.                                            00130029
+       CONFIGURATION SECTION.                                           00140029
+       SPECIAL-NAMES.                                                   00150069
+           DECIMAL-POINT IS COMMA.                                      00160070
+                                                                        00170070
+       INPUT-OUTPUT SECTION.                                            00180029
+       FILE-CONTROL.                                                    00190071
+           SELECT ENTRADA ASSIGN DDENTRA                                00200034
+           FILE STATUS IS WS-FS-ENT.                                    00210071
+                                                                        00220029
+       DATA DIVISION.                                                   00230029
+       FILE SECTION.                                                    00240029
+       FD ENTRADA                                                       00250029
+             BLOCK CONTAINS 0 RECORDS                                   00260029
+             RECORDING MODE IS F.                                       00270029
+                                                                        00280029
+       01 REG-ENTRADA     PIC X(93).                                    00290099
+                                                                        00300021
+                                                                        00310043
+       WORKING-STORAGE SECTION.                                         00320000
+                                                                        00340021
+       COPY CPSUCUR.                                                    00350099
+                                                                        00351099
+      *CONTADORES                                                       00360099
+                                                                        00370099
+      *FILE STATUS ENTRADA Y SALIDA                                     00380075
+       77  WS-FS-ENT       PIC XX           VALUE SPACES.               00390099
+                                                                        00400075
+      *ACUMULADORES                                                     00410099
+       77  WS-SEX-ACUM     PIC 9(03)        VALUE ZEROS.                00420099
+       77  WS-TIP-ACUM     PIC 9(03)        VALUE ZEROS.                00420199
+                                                                        00430099
+      *COMPARADORES DE ANTERIOR                                         00440099
+       77  WS-SEX-ANT      PIC X(03)        VALUE SPACES.               00450099
+       77  WS-SUC-ANT      PIC X(03)        VALUE SPACES.               00460099
+       77  WS-TIP-ANT      PIC X(03)        VALUE SPACES.               00461099
+                                                                        00470099
+      *TOTALIZADORES DE CUENTAS                                         00471099
+       77  WS-CC-TOT       PIC X(03)        VALUE SPACES.               00472099
+       77  WS-CA-TOT       PIC X(03)        VALUE SPACES.               00473099
+       77  WS-PF-TOT       PIC X(03)        VALUE SPACES.               00474099
+                                                                        00475099
+      *ARCHIVOS DE EDICION                                              00480099
+       77  WS-DISP         PIC   ZZ9        VALUE ZEROS.                00490099
+                                                                        00500099
+      *FIN DE LECTURA ARCHIVO                                           00510075
+       01  WS-STATUS-FIN   PIC X.                                       00520044
+           88  WS-FIN-LECTURA               VALUE 'Y'.                  00530099
+           88  WS-NO-FIN-LECTURA            VALUE 'N'.                  00540099
+                                                                        00550044
+                                                                        00555099
+      ***************************************************************.  00560000
+       PROCEDURE DIVISION.                                              00570000
+      **************************************                            00580000
+      *                                    *                            00590000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00600000
+      *                                    *                            00610000
+      **************************************                            00620000
+       MAIN-PROGRAM-INICIO.                                             00630001
+                                                                        00640044
+      *CHEQUEO FS E INICIALIZO LO QUE HAGA FALTA                        00650044
+                                                                        00660099
+           PERFORM 1000-I-INICIO  THRU                                  00670001
+                   1000-F-INICIO.                                       00680001
+                                                                        00690044
+      *REALIZO LOS PROCESOS CORRESPONDIENTES                            00700046
+                                                                        00710099
+           PERFORM 2000-I-PROCESO  THRU                                 00720001
+                   2000-F-PROCESO UNTIL WS-FIN-LECTURA.                 00730056
+                                                                        00740044
+      *CIERRO LOS ARCHIVOS,CHEQUEO FS,GUARDO REGISTROS.                 00750044
+                                                                        00760099
+           PERFORM 9999-I-FINAL    THRU                                 00770001
+                   9999-F-FINAL.                                        00780004
+                                                                        00790001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      00800001
+                                                                        00810001
+       1000-I-INICIO.                                                   00820001
+                                                                        00830050
+           SET WS-NO-FIN-LECTURA      TO TRUE                           00840099
+                                                                        00851099
+      *  CHEQUEO ARCHIVO DE ENTRADA                                     00860025
+                                                                        00870044
+           OPEN INPUT ENTRADA.                                          00880015
+           EVALUATE WS-FS-ENT                                           00890030
+            WHEN 00                                                     00900029
+             CONTINUE                                                   00910059
+            WHEN OTHER                                                  00920035
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-ENT        00930044
+             SET WS-FIN-LECTURA       TO TRUE                           00940099
+           END-EVALUATE.                                                00950030
+                                                                        00960044
+      * LEO EL ARCHIVO DE ENTRADA Y CHEQUEO FS                          00970044
+                                                                        00980044
+           READ ENTRADA INTO WS-REG-CLICOB                              00990099
+           DISPLAY '***************************************************'01000099
+           EVALUATE WS-FS-ENT                                           01010044
+            WHEN 00                                                     01020045
+      *INICIALIZAR LO QUE HAGA FALTA                                    01090099
+                                                                        01100099
+            WHEN 10                                                     01110044
+             DISPLAY 'ARCHIVO ENTRADA VACIO AL INCIO FS: ' WS-FS-ENT    01120044
+             SET WS-FIN-LECTURA       TO TRUE                           01130099
+            WHEN OTHER                                                  01140044
+             DISPLAY 'ARCHIVO ENTRADA ERROR LECTURA FS: ' WS-FS-ENT     01150044
+             SET WS-FIN-LECTURA       TO TRUE                           01160099
+           END-EVALUATE.                                                01170059
+                                                                        01180044
+       1000-F-INICIO.                                                   01190001
+                                                                        01200021
+           EXIT.                                                        01210000
+                                                                        01220021
+      **************************************                            01230000
+      *                                    *                            01240000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            01250000
+      *                                    *                            01260000
+      **************************************                            01270000
+                                                                        01280057
+      ************************************************************      01290089
+                                                                        01300089
+       2000-I-PROCESO.                                                  01310099
+                                                                        01320099
+      *GUARDO LOS PRIMEROS VALORES EN EL REGISTRO                       01330099
+                                                                        01340099
+           READ ENTRADA INTO WS-REG-ENTRADA                             01350099
+           EVALUATE WS-FS-ENT                                           01360099
+             WHEN '00'                                                  01370099
+                                                                        01380099
+             WHEN '10'                                                  01460099
+               SET WS-FIN-LECTURA     TO TRUE                           01470099
+             WHEN OTHER                                                 01480099
+               DISPLAY 'ERROR EN LECTURA ARCH ENTRADA' WS-FS-ENT        01490099
+               SET WS-FIN-LECTURA     TO  TRUE                          01500099
+           END-EVALUATE.                                                01510099
+                                                                        01520099
+       2000-F-PROCESO. EXIT.                                            01530099
+                                                                        01540099
+       2300-I-PROCESO.                                                  01550099
+                                                                        01551099
+      *PROCESO DONDE SE REALIZA EL CORTE Y LA ACUMULACION               01560099
+                                                                        01570099
+           IF WS-TIP-ANT EQUAL '01' OR '02' OR '03'                     01571099
+            IF WS-SEX-ANT EQUAL 'M' OR 'F' OR 'O'                       01572099
+             IF WS-SUC-ANT EQUAL WS-SUC-NRO                             01580099
+              IF WS-TIP-ANT EQUAL WS-SUC-TIP                            01590099
+                ADD 1 TO WS-TIP-ACUM                                    01590199
+               IF WS-SEX-ANT EQUAL WS-SUC-SEXO                          01591099
+                ADD 1 TO WS-SEX-ACUM                                    01592099
+                                                                        01600099
+               ELSE                                                     01610099
+               PERFORM 2400-CORTE-SEXO THRU                             01610199
+                       2400-F-CORTE-SEXO                                01610299
+               END-IF                                                   01620099
+              ELSE                                                      01630099
+                                                                        01631099
+              END-IF                                                    01640099
+                                                                        01641099
+             ELSE                                                       01650099
+                                                                        01651099
+             END-IF.                                                    01660099
+                                                                        01800099
+       2300-F-PROCESO. EXIT.                                            01810099
+                                                                        01820099
+                                                                        02010099
+       9999-I-FINAL.                                                    02020089
+                                                                        02030099
+      *MUESTRO ULTIMO REGISTRO                                          02040099
+                                                                        02050099
+                                                                        02060099
+      *CIERRO LOS ARCHIVOS DE ENTRADA                                   02070099
+                                                                        02080099
+           EVALUATE WS-FIN-LECTURA                                      02090089
+            WHEN TRUE                                                   02100089
+             MOVE WS-SEX-ACUM         TO WS-DISP                        02110099
+             DISPLAY 'SEXO ' WS-SEX-ANT ' CANTIDAD ' WS-DISP            02120099
+            WHEN OTHER                                                  02130089
+                                                                        02140099
+      *CERRAR ARCHIVO ENTRADA                                           02150089
+                                                                        02160099
+             CLOSE ENTRADA                                              02170089
+             EVALUATE WS-FS-ENT                                         02180089
+              WHEN 00                                                   02190089
+                 CONTINUE                                               02200089
+              WHEN OTHER                                                02210089
+               DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-ENT      02220089
+               SET WS-FIN-LECTURA TO TRUE                               02230089
+             END-EVALUATE                                               02240089
+           END-EVALUATE.                                                02250089
+                                                                        02260092
+       9999-F-FINAL. EXIT.                                              02270089

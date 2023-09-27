@@ -1,0 +1,621 @@
+       IDENTIFICATION DIVISION.                                         00010029
+        PROGRAM-ID PGMVAL51.                                            00020099
+      **************************************                            00040029
+      *VALIDACION DE UN ARCHIVO            *                            00050099
+      *                                    *                            00051099
+      **************************************                            00060029
+      *  FECHA   *    DETALLE              *                            00070099
+      **************************************                            00080029
+      *          *                         *                            00090099
+      * 19-10-22 * COMIENZO EJERCICIO 28   *                            00100099
+      *          *                         *                            00110099
+      * 20-10-22 * FIN EJERCICIO 28        *                            00111099
+      *          *                         *                            00112099
+      **************************************                            00120029
+       ENVIRONMENT DIVISION.                                            00130029
+       CONFIGURATION SECTION.                                           00140029
+       SPECIAL-NAMES.                                                   00150069
+           DECIMAL-POINT IS COMMA.                                      00160070
+                                                                        00170070
+       INPUT-OUTPUT SECTION.                                            00180029
+       FILE-CONTROL.                                                    00190071
+                                                                        00191099
+           SELECT ENTRADA    ASSIGN DDENTRA                             00200099
+           FILE STATUS IS WS-FS-ENT.                                    00210099
+                                                                        00220029
+           SELECT SALIDA     ASSIGN DDSALE                              00261099
+                  ORGANIZATION IS INDEXED                               00262099
+                  ACCESS MODE IS DYNAMIC                                00263099
+                  RECORD KEY IS  VSAM-KEY-S                             00264099
+                  FILE STATUS IS WS-FS-SAL.                             00265099
+                                                                        00280043
+       DATA DIVISION.                                                   00290029
+       FILE SECTION.                                                    00300029
+                                                                        00310096
+       FD ENTRADA                                                       00320099
+             BLOCK CONTAINS 0 RECORDS                                   00330029
+             RECORDING MODE IS F.                                       00340029
+                                                                        00350029
+       01 REG-ENT         PIC X(242).                                   00360099
+                                                                        00370099
+       FD SALIDA.                                                       00440099
+       01  REG-SAL.                                                     00450099
+           03  VSAM-KEY-S           PIC X(17).                          00460099
+           03  FILLER               PIC X(227).                         00470099
+                                                                        00490043
+       WORKING-STORAGE SECTION.                                         00500000
+                                                                        00510099
+      *FILE STATUS ENTRADA Y SALIDA                                     00770099
+       77  WS-FS-ENT               PIC XX        VALUE SPACES.          00780099
+       77  WS-FS-SAL               PIC XX        VALUE SPACES.          00800094
+                                                                        00800199
+      *CONTADORES                                                       00800299
+       77  WS-CONT                 PIC 99        VALUE ZEROES.          00800399
+       77  WS-NOV-LEI              PIC 99        VALUE ZEROES.          00800499
+       77  WS-NOV-ENC              PIC 99        VALUE ZEROES.          00800599
+       77  WS-NOV-ERR              PIC 99        VALUE ZEROES.          00800699
+       77  WS-NOV-GRA              PIC 99        VALUE ZEROES.          00800799
+                                                                        00800899
+      *MASCARAS DE EDICION                                              00800999
+       77  WS-DISP                 PIC Z9        VALUE ZEROES.          00801099
+                                                                        00801199
+      *VALIDAR FECHAS                                                   00801299
+       01 WS-FECHA-VAL.                                                 00801399
+         03 WS-ANIO                PIC 9999      VALUE ZEROES.          00801499
+         03 FILLER                 PIC X         VALUE SPACES.          00801599
+         03 WS-MES                 PIC 99        VALUE ZEROES.          00801699
+         03 FILLER                 PIC X         VALUE SPACES.          00801799
+         03 WS-DIA                 PIC 99        VALUE ZEROES.          00801899
+                                                                        00801999
+      *VALIDAR NUMERO DOCUMENTO Y USUARIO                               00802099
+       01 WS-DOC-VAL.                                                   00802199
+         03 WS-ALU                 PIC 99        VALUE ZEROES.          00802299
+         01 WS-DOC                 PIC 9(9)      VALUE ZEROES.          00802399
+                                                                        00803099
+       01 WS-USU-VAL.                                                   00804099
+         03 WS-ALU1                PIC 99        VALUE ZEROES.          00805099
+         01 WS-USU                 PIC 9(9)      VALUE ZEROES.          00806099
+                                                                        00807099
+      *FIN DE LECTURA PROGRAMA                                          01010099
+       01  WS-STATUS-FIN           PIC X.                               01020094
+           88  WS-FIN-LECTURA                    VALUE 'Y'.             01030094
+           88  WS-NO-FIN-LECTURA                 VALUE 'N'.             01040094
+                                                                        01041099
+      *FIN DE LECTURA NOVEDADES                                         01050099
+       01  WS-STATUS-FIN-ENT       PIC X.                               01060099
+           88  WS-FIN-ENT                        VALUE 'Y'.             01070099
+           88  WS-NO-FIN-ENT                     VALUE 'N'.             01080099
+                                                                        01130096
+      *DETECCION DE ERRORES                                             01131099
+       01  WS-STATUS-ERROR         PIC X.                               01132099
+           88  WS-SI-ERROR                       VALUE 'Y'.             01133099
+           88  WS-NO-ERROR                       VALUE 'N'.             01134099
+                                                                        01135099
+       01  WS-STATUS-FECHA         PIC X.                               01136099
+           88  WS-FECHA-OK                       VALUE 'Y'.             01137099
+           88  WS-FECHA-NO-OK                    VALUE 'N'.             01138099
+                                                                        01139099
+      *ESTRUCTURA ARCHIVO ENTRADA                                       01139199
+       COPY TBCLIENT.                                                   01139299
+                                                                        01139399
+      *ESTRUCTURA ARCHIVO SALIDA                                        01139499
+       COPY TBVCLIEN.                                                   01139599
+                                                                        01139699
+      ***************************************************************.  01140000
+                                                                        01145099
+       PROCEDURE DIVISION.                                              01150000
+      **************************************                            01160000
+      *                                    *                            01170000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            01180000
+      *                                    *                            01190000
+      **************************************                            01200000
+       MAIN-PROGRAM-INICIO.                                             01210001
+                                                                        01220044
+      *CHEQUEO FS E INICIALIZO LO QUE HAGA FALTA                        01230044
+           PERFORM 1000-I-INICIO  THRU                                  01240001
+                   1000-F-INICIO.                                       01250001
+                                                                        01260044
+      *REALIZO LOS PROCESOS CORRESPONDIENTES                            01270046
+           PERFORM 2000-I-PROCESO  THRU                                 01280001
+                   2000-F-PROCESO UNTIL WS-FIN-LECTURA.                 01290056
+                                                                        01300044
+      *CIERRO LOS ARCHIVOS,CHEQUEO FS,GUARDO REGISTROS.                 01310044
+           PERFORM 9999-I-FINAL    THRU                                 01320001
+                   9999-F-FINAL.                                        01330004
+                                                                        01340001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      01350001
+                                                                        01360001
+       1000-I-INICIO.                                                   01370001
+                                                                        01380050
+      *SETEO DE FLAGS PARA PODER COMENZAR                               01381099
+                                                                        01382099
+           SET WS-NO-FIN-ENT     TO TRUE                                01390099
+           SET WS-NO-FIN-LECTURA TO TRUE                                01410099
+                                                                        01420096
+      *  CHEQUEO ARCHIVOS DE ENTRADA                                    01430093
+                                                                        01440044
+           OPEN INPUT ENTRADA                                           01540099
+           EVALUATE WS-FS-ENT                                           01550099
+            WHEN 00                                                     01560093
+      *GUARDO EL PRIMER VALOR DE ENTRADA CUANDO EL FS ES CORRECTO       01560199
+              PERFORM 2010-LEER-ENTRADA   THRU                          01561099
+                      2010-LEER-ENTRADA-F                               01562099
+             CONTINUE                                                   01563099
+            WHEN OTHER                                                  01580093
+             DISPLAY 'ARCHIVO ENTRADA CORRUPTO,ERROR ' WS-FS-ENT        01590099
+             SET WS-FIN-LECTURA  TO TRUE                                01600099
+           END-EVALUATE.                                                01610093
+                                                                        01611099
+                                                                        01620093
+      * CHEQUEO ARCHIVO DE SALIDA                                       01630044
+                                                                        01640044
+           OPEN I-O SALIDA.                                             01650099
+           EVALUATE WS-FS-SAL                                           01660044
+            WHEN 00                                                     01670044
+             CONTINUE                                                   01680044
+            WHEN OTHER                                                  01690044
+             DISPLAY 'ARCHIVO SALIDA CORRUPTO, ERROR ' WS-FS-SAL        01700044
+             SET WS-FIN-LECTURA  TO TRUE                                01710099
+           END-EVALUATE.                                                01720044
+                                                                        01832099
+       1000-F-INICIO.                                                   01840001
+                                                                        01850021
+           EXIT.                                                        01860000
+                                                                        01870021
+      **************************************                            01880000
+      *                                    *                            01890000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            01900000
+      *                                    *                            01910000
+      **************************************                            01920000
+                                                                        01930057
+       2000-I-PROCESO.                                                  01940089
+                                                                        01955099
+      *COMIENZO VALIDACION                                              01955199
+                                                                        01955299
+            PERFORM 2020-VALIDAR-1 THRU                                 01955699
+                    2160-VALIDAR-16-F                                   01955799
+                                                                        01955899
+            IF WS-NO-ERROR                                              01955999
+             ADD 1 TO WS-NOV-ENC                                        01956099
+             PERFORM 3000-GRABAR-REG THRU                               01956199
+                     3000-GRABAR-REG-F                                  01956299
+            ELSE                                                        01956499
+             ADD 1 TO WS-NOV-ERR                                        01956599
+             SET WS-NO-ERROR TO TRUE                                    01956699
+            END-IF.                                                     01956899
+                                                                        01956999
+            IF WS-FIN-LECTURA                                           01957099
+             CONTINUE                                                   01957199
+            ELSE                                                        01957299
+            ADD 1 TO WS-NOV-LEI                                         01957399
+             PERFORM 2010-LEER-ENTRADA THRU                             01957499
+                     2010-LEER-ENTRADA-F                                01957599
+            END-IF.                                                     01957699
+                                                                        01958099
+       2000-F-PROCESO. EXIT.                                            02110089
+                                                                        02120089
+      ************************************************************      02130089
+       2010-LEER-ENTRADA.                                               02130199
+      *LEO EL ARCHIVO ENTRADA Y GUARDO DATOS PARA COMPARAR              02130299
+            SET WS-NO-ERROR TO TRUE                                     02130399
+            READ ENTRADA INTO WN-TBCLIE                                 02130599
+            EVALUATE WS-FS-ENT                                          02130699
+            WHEN '00'                                                   02130799
+            CONTINUE                                                    02130899
+            WHEN '10'                                                   02130999
+             SET WS-FIN-LECTURA TO TRUE                                 02131099
+            WHEN OTHER                                                  02131299
+             DISPLAY 'ERROR EN LECTURA ARCHIVO FS= ' WS-FS-ENT          02131399
+             SET WS-FIN-LECTURA TO TRUE                                 02131499
+            END-EVALUATE.                                               02131599
+                                                                        02131699
+       2010-LEER-ENTRADA-F. EXIT.                                       02131799
+                                                                        02132499
+       2020-VALIDAR-1.                                                  02132599
+                                                                        02132699
+           IF WN-CLI-TIPO-NOVEDAD = 'AL'                                02132799
+            CONTINUE                                                    02132899
+      *     SET WS-NO-ERROR TO TRUE                                     02132999
+           ELSE                                                         02133099
+            SET WS-SI-ERROR TO TRUE                                     02133199
+            PERFORM 2500-DISPLAY-ERROR THRU                             02133299
+                    2500-DISPLAY-ERROR-F                                02133399
+            DISPLAY 'ERROR EN EL CAMPO WN-CLI-TIPO-NOVEDAD '            02133499
+                     WN-CLI-TIPO-NOVEDAD                                02133599
+           END-IF.                                                      02133699
+                                                                        02133799
+       2020-VALIDAR-1-F. EXIT.                                          02133899
+                                                                        02133999
+       2030-VALIDAR-2.                                                  02134099
+                                                                        02134199
+           IF WN-CLI-TIPO-DOCUMENTO = 'DU' OR 'PA' OR 'LE' OR 'LC'      02134299
+              CONTINUE                                                  02134399
+           ELSE                                                         02134499
+              IF WS-SI-ERROR                                            02134599
+                 CONTINUE                                               02134699
+              ELSE                                                      02134799
+                 SET WS-SI-ERROR TO TRUE                                02134899
+                 PERFORM 2500-DISPLAY-ERROR THRU                        02134999
+                         2500-DISPLAY-ERROR-F                           02135099
+              END-IF                                                    02135499
+           DISPLAY 'ERROR EN EL CAMPO WN-CLI-TIPO-DOCUMENTO '           02135599
+                     WN-CLI-TIPO-DOCUMENTO                              02135699
+           END-IF.                                                      02135799
+                                                                        02135899
+       2030-VALIDAR-2-F. EXIT.                                          02135999
+                                                                        02136099
+       2040-VALIDAR-3.                                                  02136199
+                                                                        02136299
+            MOVE WN-CLI-NRO-DOCUMENTO TO WS-DOC-VAL                     02136399
+            IF WS-DOC IS NUMERIC                                        02136499
+             IF WS-ALU = '51'                                           02136599
+              CONTINUE                                                  02136699
+             ELSE                                                       02137099
+               IF WS-SI-ERROR                                           02138099
+                CONTINUE                                                02139099
+               ELSE                                                     02140099
+                SET WS-SI-ERROR TO TRUE                                 02141099
+                PERFORM 2500-DISPLAY-ERROR THRU                         02141199
+                        2500-DISPLAY-ERROR-F                            02141299
+               END-IF                                                   02143299
+                DISPLAY 'ERROR EN EL CAMPO WN-CLI-NRO-DOCUMENTO '       02143399
+                         WN-CLI-NRO-DOCUMENTO                           02143499
+                                                                        02143599
+       2040-VALIDAR-3.                                                  02143699
+                                                                        02143799
+       2050-VALIDAR-4.                                                  02143999
+                                                                        02144099
+            MOVE WN-CLI-NRO-CLIENTE TO WS-USU-VAL                       02144199
+            IF WS-USU IS NUMERIC                                        02144299
+             IF WS-ALU1 = '51'                                          02144399
+              CONTINUE                                                  02144499
+             ELSE                                                       02144599
+               IF WS-SI-ERROR                                           02144699
+                CONTINUE                                                02144799
+               ELSE                                                     02144899
+                SET WS-SI-ERROR TO TRUE                                 02144999
+                PERFORM 2500-DISPLAY-ERROR THRU                         02145099
+                        2500-DISPLAY-ERROR-F                            02145199
+               END-IF                                                   02145599
+                DISPLAY 'ERROR EN EL CAMPO WN-CLI-NRO-CLIENTE '         02145699
+                         WN-CLI-NRO-CLIENTE                             02145799
+                                                                        02145899
+       2050-VALIDAR-4-F. EXIT.                                          02145999
+                                                                        02147799
+       2060-VALIDAR-6.                                                  02147899
+                                                                        02147999
+           IF WN-CLI-NOMBRE-CLIENTE NOT EQUAL SPACES                    02148099
+            CONTINUE                                                    02148199
+           ELSE                                                         02148299
+            IF WS-SI-ERROR                                              02148399
+             CONTINUE                                                   02148499
+            ELSE                                                        02148599
+             SET WS-SI-ERROR TO TRUE                                    02148699
+                PERFORM 2500-DISPLAY-ERROR THRU                         02148799
+                        2500-DISPLAY-ERROR-F                            02148899
+            END-IF                                                      02149299
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-NOMBRE-CLIENTE '         02149399
+                     WN-CLI-NOMBRE-CLIENTE                              02149499
+           END-IF.                                                      02149599
+                                                                        02149699
+       2060-VALIDAR-6-F. EXIT.                                          02149799
+                                                                        02149899
+       2070-VALIDAR-7.                                                  02149999
+                                                                        02150099
+           IF WN-CLI-APELLIDO-CLIENTE NOT EQUAL SPACES                  02150199
+            CONTINUE                                                    02150299
+           ELSE                                                         02150399
+            IF WS-SI-ERROR                                              02150499
+             CONTINUE                                                   02150599
+            ELSE                                                        02150699
+             SET WS-SI-ERROR TO TRUE                                    02150799
+                PERFORM 2500-DISPLAY-ERROR THRU                         02150899
+                        2500-DISPLAY-ERROR-F                            02150999
+            END-IF                                                      02151399
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-APELLIDO-CLIENTE '       02151499
+                     WN-CLI-APELLIDO-CLIENTE                            02151599
+           END-IF.                                                      02151699
+                                                                        02151799
+       2070-VALIDAR-7-F. EXIT.                                          02151899
+                                                                        02151999
+       2080-VALIDAR-8.                                                  02152099
+                                                                        02152199
+           IF WN-CLI-DOMICILIO NOT EQUAL SPACES                         02152299
+            CONTINUE                                                    02152399
+           ELSE                                                         02152499
+            IF WS-SI-ERROR                                              02152599
+             CONTINUE                                                   02152699
+            ELSE                                                        02152799
+             SET WS-SI-ERROR TO TRUE                                    02152899
+                PERFORM 2500-DISPLAY-ERROR THRU                         02152999
+                        2500-DISPLAY-ERROR-F                            02153099
+            END-IF                                                      02153499
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-DOMICILIO '              02153599
+                     WN-CLI-DOMICILIO                                   02153699
+           END-IF.                                                      02153799
+                                                                        02153899
+       2080-VALIDAR-8-F. EXIT.                                          02153999
+                                                                        02154099
+       2090-VALIDAR-9.                                                  02154199
+                                                                        02154299
+           IF WN-CLI-CIUDAD NOT EQUAL SPACES                            02154399
+            CONTINUE                                                    02154499
+           ELSE                                                         02154599
+            IF WS-SI-ERROR                                              02154699
+             CONTINUE                                                   02154799
+            ELSE                                                        02154899
+             SET WS-SI-ERROR TO TRUE                                    02154999
+                PERFORM 2500-DISPLAY-ERROR THRU                         02155099
+                        2500-DISPLAY-ERROR-F                            02155199
+            END-IF                                                      02155599
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-CIUDAD '                 02155699
+                     WN-CLI-CIUDAD                                      02155799
+           END-IF.                                                      02155899
+                                                                        02155999
+       2090-VALIDAR-9-F. EXIT.                                          02156099
+                                                                        02156199
+       2100-VALIDAR-10.                                                 02156299
+                                                                        02156399
+           IF WN-CLI-CODIGO-POSTAL IS NUMERIC                           02156499
+            CONTINUE                                                    02156599
+           ELSE                                                         02156699
+            IF WS-SI-ERROR                                              02156799
+             CONTINUE                                                   02156899
+            ELSE                                                        02156999
+             SET WS-SI-ERROR TO TRUE                                    02157099
+                PERFORM 2500-DISPLAY-ERROR THRU                         02157199
+                        2500-DISPLAY-ERROR-F                            02157299
+            END-IF                                                      02157699
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-CODIGO-POSTAL '          02157799
+                     WN-CLI-CODIGO-POSTAL                               02157899
+           END-IF.                                                      02157999
+                                                                        02158099
+       2100-VALIDAR-10-F. EXIT.                                         02158199
+                                                                        02158299
+       2110-VALIDAR-11.                                                 02158399
+                                                                        02158499
+           IF WN-CLI-NACIONALIDAD  NOT EQUAL SPACES                     02158599
+            CONTINUE                                                    02158699
+           ELSE                                                         02158799
+            IF WS-SI-ERROR                                              02158899
+             CONTINUE                                                   02158999
+            ELSE                                                        02159099
+             SET WS-SI-ERROR TO TRUE                                    02159199
+                PERFORM 2500-DISPLAY-ERROR THRU                         02159299
+                        2500-DISPLAY-ERROR-F                            02159399
+            END-IF                                                      02159799
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-NACIONALIDAD '           02159899
+                     WN-CLI-NACIONALIDAD                                02159999
+           END-IF.                                                      02160099
+                                                                        02160199
+       2110-VALIDAR-11-F. EXIT.                                         02160299
+                                                                        02160399
+       2120-VALIDAR-12.                                                 02160499
+                                                                        02160599
+           MOVE WN-CLI-FECHA-DE-ALTA TO WS-FECHA-VAL                    02160699
+           PERFORM 2200-VALIDAR-FECHA  THRU                             02160799
+                   2200-VALIDAR-FECHA-F                                 02160899
+           IF WS-FECHA-OK                                               02160999
+            CONTINUE                                                    02161099
+            MOVE SPACES TO WK-CLI-FECHA-DE-ALTA                         02161199
+           ELSE                                                         02161299
+            IF WS-SI-ERROR                                              02161399
+             CONTINUE                                                   02161499
+            ELSE                                                        02161599
+             SET WS-SI-ERROR TO TRUE                                    02161699
+                PERFORM 2500-DISPLAY-ERROR THRU                         02161799
+                        2500-DISPLAY-ERROR-F                            02161899
+            END-IF                                                      02162299
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-FECHA-DE-ALTA '          02162399
+                     WN-CLI-FECHA-DE-ALTA                               02162499
+           END-IF.                                                      02162599
+                                                                        02162699
+       2120-VALIDAR-12-F. EXIT.                                         02162799
+                                                                        02162899
+       2130-VALIDAR-13.                                                 02162999
+                                                                        02163099
+           MOVE WN-CLI-FECHA-DE-BAJA TO WS-FECHA-VAL                    02163199
+           PERFORM 2200-VALIDAR-FECHA  THRU                             02163299
+                   2200-VALIDAR-FECHA-F                                 02163399
+           IF WS-FECHA-OK                                               02163499
+            CONTINUE                                                    02163599
+            MOVE SPACES TO WK-CLI-FECHA-DE-BAJA                         02163699
+           ELSE                                                         02163799
+            IF WS-SI-ERROR                                              02163899
+             CONTINUE                                                   02163999
+            ELSE                                                        02164099
+             SET WS-SI-ERROR TO TRUE                                    02164199
+                PERFORM 2500-DISPLAY-ERROR THRU                         02164299
+                        2500-DISPLAY-ERROR-F                            02164399
+            END-IF                                                      02164799
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-FECHA-DE-BAJA '          02164899
+                     WN-CLI-FECHA-DE-BAJA                               02164999
+           END-IF.                                                      02165099
+                                                                        02165199
+       2130-VALIDAR-13-F. EXIT.                                         02165299
+                                                                        02165399
+       2140-VALIDAR-14.                                                 02165499
+                                                                        02165599
+           IF WN-CLI-ESTADO-CIVIL = 'SO' OR 'VI' OR 'CA' OR 'DI' OR 'UC'02165699
+            CONTINUE                                                    02165799
+           ELSE                                                         02165899
+            IF WS-SI-ERROR                                              02165999
+             CONTINUE                                                   02166099
+            ELSE                                                        02166199
+             SET WS-SI-ERROR TO TRUE                                    02166299
+                PERFORM 2500-DISPLAY-ERROR THRU                         02166399
+                        2500-DISPLAY-ERROR-F                            02166499
+            END-IF                                                      02166899
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-ESTADO-CIVIL '           02166999
+                     WN-CLI-ESTADO-CIVIL                                02167099
+           END-IF.                                                      02167199
+                                                                        02167299
+       2140-VALIDAR-14-F. EXIT.                                         02167399
+                                                                        02167499
+       2150-VALIDAR-15.                                                 02167599
+                                                                        02167699
+           IF WN-CLI-SEXO = 'MM' OR 'FF' OR 'OO'                        02167799
+            CONTINUE                                                    02167899
+           ELSE                                                         02167999
+            IF WS-SI-ERROR                                              02168099
+             CONTINUE                                                   02168199
+            ELSE                                                        02168299
+             SET WS-SI-ERROR TO TRUE                                    02168399
+                PERFORM 2500-DISPLAY-ERROR THRU                         02168499
+                        2500-DISPLAY-ERROR-F                            02168599
+            END-IF                                                      02168999
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-SEXO '                   02169099
+                     WN-CLI-SEXO                                        02169199
+           END-IF.                                                      02169299
+                                                                        02169399
+       2150-VALIDAR-15-F. EXIT.                                         02169499
+                                                                        02169599
+       2160-VALIDAR-16.                                                 02169699
+                                                                        02169799
+           IF WN-CLI-CORREO-ELECTRONICO NOT EQUAL SPACES                02169899
+            CONTINUE                                                    02169999
+           ELSE                                                         02170099
+            IF WS-SI-ERROR                                              02170199
+             CONTINUE                                                   02170299
+            ELSE                                                        02170399
+             SET WS-SI-ERROR TO TRUE                                    02170499
+                PERFORM 2500-DISPLAY-ERROR THRU                         02170599
+                        2500-DISPLAY-ERROR-F                            02170699
+            END-IF                                                      02171099
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-CORREO-ELECTRONICO '     02171199
+                     WN-CLI-CORREO-ELECTRONICO                          02171299
+           END-IF.                                                      02171399
+                                                                        02171499
+       2150-VALIDAR-15-F. EXIT.                                         02171599
+                                                                        02171699
+       2160-VALIDAR-16.                                                 02171799
+                                                                        02171899
+           MOVE WN-CLI-FECCHA-NACIMIENTO TO WS-FECHA-VAL                02171999
+           PERFORM 2200-VALIDAR-FECHA  THRU                             02172099
+                   2200-VALIDAR-FECHA-F                                 02172199
+           IF WS-FECHA-OK                                               02172299
+            CONTINUE                                                    02172399
+           ELSE                                                         02172499
+            IF WS-SI-ERROR                                              02172599
+             CONTINUE                                                   02172699
+            ELSE                                                        02172799
+             SET WS-SI-ERROR TO TRUE                                    02172899
+                PERFORM 2500-DISPLAY-ERROR THRU                         02172999
+                        2500-DISPLAY-ERROR-F                            02173099
+            END-IF                                                      02173499
+             DISPLAY 'ERROR EN EL CAMPO WN-CLI-FECCHA-NACIMIENTO '      02173599
+                     WN-CLI-FECCHA-NACIMIENTO                           02173699
+           END-IF.                                                      02173799
+                                                                        02173899
+       2160-VALIDAR-16-F. EXIT.                                         02173999
+                                                                        02174099
+       2200-VALIDAR-FECHA.                                              02174199
+                                                                        02174299
+           SET WS-FECHA-NO-OK TO TRUE                                   02174399
+                                                                        02174499
+           IF WS-ANIO < '2023' AND WS-ANIO > '1900'                     02174599
+             IF WS-MES = '01' OR '04' OR '06' OR '09' OR '11'           02174699
+               IF WS-DIA < '32'                                         02174799
+                SET WS-FECHA-OK TO TRUE                                 02174899
+               ELSE                                                     02174999
+                CONTINUE                                                02175099
+               END-IF                                                   02175199
+             ELSE                                                       02175299
+              IF WS-MES = '02'                                          02175399
+               IF WS-DIA < '29'                                         02175499
+                SET WS-FECHA-OK TO TRUE                                 02175599
+               ELSE                                                     02175699
+                CONTINUE                                                02175799
+              ELSE                                                      02175899
+               IF WS-DIA < '31'                                         02175999
+                SET WS-FECHA-OK TO TRUE                                 02176099
+               ELSE                                                     02176199
+               CONTINUE                                                 02176299
+               END-IF                                                   02176399
+             END-IF                                                     02176499
+           ELSE                                                         02176599
+            CONTINUE                                                    02176699
+           END-IF.                                                      02176799
+                                                                        02176899
+       2200-VALIDAR-FECHA-F. EXIT.                                      02176999
+                                                                        02177099
+       2500-DISPLAY-ERROR.                                              02177199
+            DISPLAY 'TIPO NOVEDAD     ' WN-CLI-TIPO-NOVEDAD             02177299
+            DISPLAY 'TIPO  DOCUMENTO  ' WN-CLI-TIPO-DOCUMENTO           02177399
+            DISPLAY 'NUMERO DOCUMENTO 'WN-CLI-NRO-DOCUMENTO             02177499
+       2500-DISPLAY-ERROR-F. EXIT.                                      02177599
+                                                                        02177699
+       3000-GRABAR-REG.                                                 02177799
+      *GRABO REGISTROS                                                  02177899
+      *ESTA PARTE LA HAGO ASI PORQUE LOS REGISTROS DE SALIDA Y ENTRADA  02177999
+      *NO COINCIDEN, EN EL MEDIO DEL DE SALIDA HAY UN CONTADOR          02178099
+             MOVE WN-CLI-TIPO-NOVEDAD      TO WK-CLI-TIPO-NOVEDAD       02178199
+             MOVE WN-CLI-TIPO-DOCUMENTO    TO WK-CLI-TIPO-DOCUMENTO     02178299
+             MOVE WN-CLI-NRO-DOCUMENTO     TO WK-CLI-NRO-DOCUMENTO      02178399
+             MOVE WN-CLI-NRO-CLIENTE       TO WK-CLI-NRO-CLIENTE        02178499
+             MOVE WN-CLI-NOMBRE-CLIENTE    TO WK-CLI-NOMBRE-CLIENTE     02178599
+             MOVE WN-CLI-APELLIDO-CLIENTE  TO WK-CLI-APELLIDO-CLIENTE   02178699
+             MOVE WN-CLI-DOMICILIO         TO WK-CLI-DOMICILIO          02178799
+             MOVE WN-CLI-CIUDAD            TO WK-CLI-CIUDAD             02178899
+             MOVE WN-CLI-SEXO              TO WK-CLI-SEXO               02178999
+             MOVE WN-CLI-CODIGO-POSTAL     TO WK-CLI-CODIGO-POSTAL      02179099
+             MOVE WN-CLI-NACIONALIDAD      TO WK-CLI-NACIONALIDAD       02179199
+             MOVE WN-CLI-CORREO-ELECTRONICO                             02179299
+                             TO WK-CLI-CORREO-ELECTRONICO               02179399
+             MOVE WN-CLI-FECCHA-NACIMIENTO TO WK-CLI-FECCHA-NACIMIENTO  02179499
+             MOVE WN-CLI-ESTADO-CIVIL      TO  WK-CLI-ESTADO-CIVIL      02179599
+             ADD 1 TO WS-CONT                                           02179699
+             MOVE WS-CONT      TO WK-CLI-NRO-SEC                        02179799
+                                                                        02179899
+             WRITE REG-SAL FROM WK-TBCLIE                               02179999
+                                                                        02180099
+             IF WS-FS-SAL IS NOT EQUAL '00'                             02180199
+                DISPLAY '* ERROR EN WRITE SALIDA = ' WS-FS-SAL          02180299
+                SET WS-FIN-LECTURA TO TRUE                              02180399
+             ELSE                                                       02180499
+                ADD 1 TO WS-NOV-GRA                                     02180599
+             END-IF.                                                    02180699
+                                                                        02180799
+                                                                        02180899
+       3000-GRABAR-REG-F. EXIT.                                         02181099
+                                                                        02190099
+                                                                        02600099
+                                                                        02604099
+      ********************************************************          02610089
+                                                                        02620089
+       9999-I-FINAL.                                                    02630089
+                                                                        02631099
+      *MUESTRO TOTALES PEDIDOS                                          02632099
+            MOVE WS-NOV-LEI TO WS-DISP                                  02632199
+            DISPLAY 'TOTAL DE NOVEDADES LEIDAS      : ' WS-DISP         02633099
+            MOVE WS-NOV-ENC TO WS-DISP                                  02633199
+            DISPLAY 'TOTAL DE NOVEDADES ENCONTRADAS : ' WS-DISP         02633299
+            MOVE WS-NOV-ERR TO WS-DISP                                  02633399
+            DISPLAY 'TOTAL DE NOVEDADES ERRONEAS    : ' WS-DISP         02633499
+            MOVE WS-NOV-GRA TO WS-DISP                                  02633599
+            DISPLAY 'TOTAL DE NOVEDADES GRABADAS    : ' WS-DISP         02633699
+                                                                        02634099
+      *CIERRO LOS ARCHIVOS DE ENTRADA Y SALIDA                          02640091
+                                                                        02650099
+      *CERRAR ARCHIVOS ENTRADA                                          02700098
+             CLOSE ENTRADA                                              02710099
+             EVALUATE WS-FS-ENT                                         02720099
+              WHEN 00                                                   02730089
+                 CONTINUE                                               02740089
+              WHEN OTHER                                                02750089
+               DISPLAY 'ARCHIVO CLIENTE CORRUPTO,ERROR ' WS-FS-ENT      02760099
+               SET WS-FIN-LECTURA TO TRUE                               02770089
+             END-EVALUATE                                               02780094
+                                                                        02790094
+                                                                        02880089
+      *CERRAR ARCHIVO SALIDA                                            02890089
+             CLOSE SALIDA                                               02900089
+             EVALUATE WS-FS-SAL                                         02910089
+              WHEN 00                                                   02920089
+                 CONTINUE                                               02930089
+              WHEN OTHER                                                02940089
+               DISPLAY 'ARCHIVO SALIDA CORRUPTO,ERROR ' WS-FS-SAL       02950089
+               SET WS-FIN-LECTURA TO TRUE                               02960089
+             END-EVALUATE.                                              02970099
+                                                                        02990089
+       9999-F-FINAL. EXIT.                                              03000089

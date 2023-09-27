@@ -1,0 +1,170 @@
+       IDENTIFICATION DIVISION.                                         00010001
+        PROGRAM-ID PGMVEC51.                                            00020099
+                                                                        00030021
+       ENVIRONMENT DIVISION.                                            00040000
+       CONFIGURATION SECTION.                                           00050009
+       INPUT-OUTPUT SECTION.                                            00060047
+       FILE-CONTROL.                                                    00070049
+           SELECT NOVEDAD  ASSIGN DDNOV                                 00080099
+                    FILE STATUS IS WS-NOV-CODE.                         00090099
+                                                                        00100048
+       DATA DIVISION.                                                   00110047
+       FILE SECTION.                                                    00120049
+                                                                        00130047
+       FD NOVEDAD                                                       00140099
+             BLOCK CONTAINS 0 RECORDS                                   00150053
+             RECORDING MODE IS F.                                       00160050
+       01 NOV-ENT           PIC X(82).                                  00170099
+                                                                        00180047
+       WORKING-STORAGE SECTION.                                         00190044
+                                                                        00200021
+       77 WS-FIN-NOV        PIC 9   VALUE ZEROES.                       00210099
+       77 WS-NOV-CODE       PIC XX  VALUE SPACES.                       00220099
+       77 WS-COD-NO-ENC     PIC 999 VALUE ZEROES.                       00230099
+                                                                        00231099
+      *FLAGS                                                            00232099
+                                                                        00233099
+       01 WS-FIN-NOV        PIC X.                                      00240099
+          88 WS-SI-FIN-NOV          VALUE 'Y'.                          00250099
+          88 WS-NO-FIN-NOV          VALUE 'N'.                          00260099
+                                                                        00270039
+         COPY CPNOVED.                                                  00280099
+                                                                        00290099
+      *ESTRUCTURA VECTOR                                                00291099
+                                                                        00292099
+       01 WS-VECTOR.                                                    00300051
+         05 WS-ITEM OCCURS 3 TIMES.                                     00310099
+           10 WS-CAMPO1     PIC XX.                                     00320099
+           10 WS-CAMPO2     PIC 999.                                    00330099
+                                                                        00340099
+      *DISPLAY                                                          00341099
+                                                                        00341199
+       01 WS-DISP-AL        PIC ZZ9 VALUE SPACES.                       00342099
+       01 WS-DISP-BA        PIC ZZ9 VALUE SPACES.                       00343099
+       01 WS-DISP-MO        PIC ZZ9 VALUE SPACES.                       00344099
+       01 WS-DISP-NE        PIC ZZ9 VALUE SPACES.                       00344199
+                                                                        00345099
+      ***************************************************************.  00350000
+       PROCEDURE DIVISION.                                              00360000
+      **************************************                            00370000
+      *                                    *                            00380000
+      *  CUERPO PRINCIPAL DEL PROGRAMA     *                            00390000
+      *                                    *                            00400000
+      **************************************                            00410000
+       MAIN-PROGRAM-INICIO.                                             00420001
+                                                                        00430000
+           PERFORM 1000-I-INICIO  THRU                                  00440047
+                   1000-F-INICIO.                                       00450047
+                                                                        00460001
+           PERFORM 2000-I-PROCESO THRU                                  00470099
+                   2000-F-PROCESO       UNTIL WS-SI-FIN-NOV.            00480099
+                                                                        00490099
+           PERFORM 9999-I-FINAL    THRU                                 00500048
+                   9999-F-FINAL.                                        00510048
+                                                                        00520001
+       MAIN-PROGRAM-FINAL. GOBACK.                                      00530099
+                                                                        00540099
+      **************************************                            00550099
+      *                                    *                            00560099
+      *  INICIO DEL PROGRAMA               *                            00570099
+      *                                    *                            00580099
+      **************************************                            00590099
+                                                                        00600001
+       1000-I-INICIO.                                                   00610051
+                                                                        00620027
+      *REVISAR FILE STATUS                                              00630099
+           SET WS-NO-FIN-NOV TO TRUE                                    00640099
+           OPEN INPUT NOVEDAD.                                          00650099
+           EVALUATE WS-NOV-CODE                                         00660099
+                                                                        00670099
+            WHEN '00'                                                   00680063
+      *      DISPLAY 'ESTADO DEL ARCHIVO CORRECTO'                      00690099
+             CONTINUE                                                   00700063
+                                                                        00710099
+            WHEN OTHER                                                  00720063
+             DISPLAY 'ERROR EN LA APER DE ARCH NOV FS=' WS-NOV-CODE     00730099
+             SET WS-SI-FIN-NOV TO TRUE                                  00740099
+                                                                        00750099
+           END-EVALUATE.                                                00760051
+                                                                        00770099
+      *RELLENAR LISTAS                                                  00780099
+                                                                        00790099
+             MOVE 'AL' TO WS-CAMPO1(1).                                 00800099
+             MOVE ZERO TO WS-CAMPO2(1).                                 00810099
+                                                                        00820099
+             MOVE 'BA' TO WS-CAMPO1(2).                                 00830099
+             MOVE ZERO TO WS-CAMPO2(2).                                 00840099
+                                                                        00850099
+             MOVE 'MO' TO WS-CAMPO1(3).                                 00860099
+             MOVE ZERO TO WS-CAMPO2(3).                                 00870099
+                                                                        00880099
+      *      DISPLAY 'FIN-INICIO'.                                      00890099
+                                                                        00900099
+       1000-F-INICIO.   EXIT.                                           00910099
+                                                                        00920099
+      **************************************                            00930000
+      *                                    *                            00940000
+      *  CUERPO PRINCIPAL DE PROCESO       *                            00950000
+      *                                    *                            00960000
+      **************************************                            00970000
+       2000-I-PROCESO.                                                  00980099
+                                                                        00990000
+      *     DISPLAY 'INI-PROCESO'.                                      01000099
+      * COMIENZO A LEER NOVEDADES                                       01010099
+           READ NOVEDAD INTO WC-TBCUEN                                  01020099
+           EVALUATE WS-NOV-CODE                                         01030099
+             WHEN '00'                                                  01040099
+              EVALUATE WC-CUE-TIPO-NOVEDAD                              01050099
+               WHEN WS-CAMPO1(1)                                        01060099
+                ADD 1 TO WS-CAMPO2(1)                                   01070099
+                                                                        01080099
+               WHEN WS-CAMPO1(2)                                        01090099
+                ADD 1 TO WS-CAMPO2(2)                                   01100099
+                                                                        01110099
+               WHEN WS-CAMPO1(3)                                        01120099
+                ADD 1 TO WS-CAMPO2(3)                                   01130099
+                                                                        01140099
+               WHEN OTHER                                               01150099
+                ADD 1 TO WS-COD-NO-ENC                                  01160099
+                                                                        01170099
+              END-EVALUATE                                              01180099
+                                                                        01190099
+             WHEN '10'                                                  01200099
+      *        DISPLAY 'FIN DE REGISTOS'                                01210099
+               SET WS-SI-FIN-NOV TO TRUE                                01220099
+                                                                        01230099
+             WHEN OTHER                                                 01240099
+               DISPLAY ' ERROR AL LEER ARCH NOV,FS = ' WS-NOV-CODE      01250099
+               SET WS-SI-FIN-NOV TO TRUE                                01260099
+                                                                        01270099
+           END-EVALUATE.                                                01280099
+      *     DISPLAY 'FIN-PROCESO'.                                      01290099
+       2000-F-PROCESO. EXIT.                                            01300099
+                                                                        01310047
+                                                                        01320000
+      **************************************                            01330000
+      *                                    *                            01340000
+      *  CUERPO FINAL MUESTRA RESULTADO    *                            01350000
+      *                                    *                            01360000
+      **************************************                            01370000
+       9999-I-FINAL.                                                    01380099
+      *    MUEVO LA INFORMACION AL CAMPO DISPLAY CORRESPONDIENTE        01381099
+                                                                        01381199
+           MOVE WS-CAMPO2(1)  TO WS-DISP-AL                             01382099
+           MOVE WS-CAMPO2(2)  TO WS-DISP-BA                             01382199
+           MOVE WS-CAMPO2(3)  TO WS-DISP-MO                             01382299
+           MOVE WS-COD-NO-ENC TO WS-DISP-NE                             01382399
+                                                                        01386099
+           CLOSE NOVEDAD.                                               01390099
+           EVALUATE WS-NOV-CODE                                         01400099
+             WHEN '00'                                                  01410099
+      *     DISPLAY 'INI-FIN'                                           01420099
+            DISPLAY 'EL TOTAL DE ALTAS ES : ' WS-DISP-AL                01430099
+            DISPLAY 'EL TOTAL DE BAJAS ES : ' WS-DISP-BA                01440099
+            DISPLAY 'EL TOTAL DE MODIF ES : ' WS-DISP-MO                01450099
+            DISPLAY 'EL TOTAL DE CODIGOS NO ENCONTRADOS: ' WS-DISP-NE   01460099
+             WHEN OTHER                                                 01470099
+            DISPLAY 'ERROR EN EL FS N� ' WS-NOV-CODE                    01480099
+           END-EVALUATE.                                                01490099
+      *     DISPLAY 'FIN-FIN'.                                          01500099
+       9999-F-FINAL.  EXIT.                                             01510048

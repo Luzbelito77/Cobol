@@ -1,0 +1,159 @@
+       IDENTIFICATION DIVISION.                                         00010099
+       PROGRAM-ID. PGMMEN51.                                            00020099
+       DATA DIVISION.                                                   00030099
+       FILE SECTION.                                                    00040099
+       WORKING-STORAGE SECTION.                                         00050099
+                                                                        00060099
+       01  WS-RESP       PIC S9(04) COMP.                               00070099
+       01  WS-LONG       PIC S9(04) COMP.                               00080099
+                                                                        00090099
+      *VARIABLES PARA MENSAJES                                          00100099
+       01  WS-EXIT       PIC X(30)  VALUE ' FIN TRANSACCION T151'.      00110099
+       01  WS-PF         PIC X(15)  VALUE SPACES.                       00120099
+       01  WS-PF1        PIC X(04)  VALUE 'ALTA'.                       00130099
+       01  WS-PF2        PIC X(04)  VALUE 'BAJA'.                       00140099
+       01  WS-PF3        PIC X(12)  VALUE 'MODIFICACION'.               00150099
+       01  WS-PF4        PIC X(08)  VALUE 'CONSULTA'.                   00160099
+       01  WS-PF12       PIC X(05)  VALUE 'SALIR'.                      00170099
+       01  WS-ERROR      PIC X(30)  VALUE '             TECLA ERRONEA '.00180099
+       01  WS-MENU       PIC X(30)  VALUE 'VUELVE AL MENU  '.           00190099
+       01  WS-INI        PIC X(42)                                      00200099
+                     VALUE 'INGRESE UNA TECLA PARA COMENZAR EL PROCESO'.00210099
+                                                                        00220099
+      *VARIABLES PARA FECHA                                             00230099
+       01 WS-ABSTIME        PIC S9(16) COMP VALUE +0.                   00240099
+       01 WS-FECHA          PIC X(10)       VALUE SPACES.               00250099
+       01 WS-SEP-FEC        PIC X           VALUE '/'.                  00260099
+                                                                        00261099
+       01 WS-COMMAREA.                                                  00262099
+          05 WS-FECCOM      PIC X(10)       VALUE SPACES.               00263099
+       01 WS-LEN            PIC 99          VALUE 10.                   00264099
+       01 WS-RUT            PIC X(8)        VALUE 'PGMFEC51'.           00265099
+                                                                        00270099
+       COPY MAP0251.                                                    00280099
+       COPY DFHAID.                                                     00290099
+       COPY DFHBMSCA.                                                   00300099
+                                                                        00310099
+       PROCEDURE DIVISION.                                              00320099
+                                                                        00330099
+       MAIN-PROGRAM.                                                    00340099
+                                                                        00350099
+           PERFORM 1000-I-INICIO  THRU 1000-F-INICIO.                   00360099
+                                                                        00370099
+           PERFORM 2000-I-PROCESO THRU 2000-F-PROCESO.                  00380099
+                                                                        00390099
+           PERFORM 9999-I-FINAL THRU 9999-F-FINAL.                      00400099
+                                                                        00410099
+       1000-I-INICIO.                                                   00420099
+                                                                        00430099
+             IF EIBCALEN = 0                                            00440099
+              MOVE LENGTH OF MAP0251O TO WS-LONG                        00450099
+              MOVE LOW-VALUES   TO MAP0251O                             00460099
+              MOVE WS-INI       TO MSGO                                 00470099
+              PERFORM 6000-I-FECHA THRU 6000-F-FECHA                    00480099
+                 EXEC CICS                                              00490099
+                    SEND MAP ('MAP0251')                                00500099
+                    MAPSET ('MAP0251')                                  00510099
+                    FROM (MAP0251O)                                     00520099
+                    LENGTH (WS-LONG)                                    00530099
+                    ERASE                                               00540099
+                    FREEKB                                              00550099
+                 END-EXEC                                               00560099
+             END-IF.                                                    00570099
+                                                                        00580099
+       1000-F-INICIO. EXIT.                                             00590099
+                                                                        00600099
+       2000-I-PROCESO.                                                  00610099
+                                                                        00620099
+      *SE RECIBEN LOS DATOS INGRESADOS Y SE EVALUA LA TECLA PRESIONADA  00630099
+                 EXEC CICS                                              00640099
+                      RECEIVE MAP    ('MAP0251')                        00650099
+                              MAPSET ('MAP0251')                        00660099
+                              INTO   (MAP0251I)                         00670099
+                              RESP   (WS-RESP)                          00680099
+                 END-EXEC                                               00690099
+              IF EIBAID = DFHPF1 OR DFHPF2 OR DFHPF3 OR DFHPF4          00700099
+                                 OR DFHPF12                             00710099
+                   PERFORM 3100-I-PF   THRU  3100-F-PF                  00720099
+              ELSE                                                      00730099
+                   PERFORM 4000-I-OTHER  THRU  4000-F-OTHER             00740099
+              END-IF.                                                   00750099
+                                                                        00760099
+       2000-F-PROCESO. EXIT.                                            00770099
+                                                                        00780099
+       3100-I-PF.                                                       00790099
+                                                                        00800099
+      *SALE DE LA PANTALLA Y VUELVE AL CICS                             00810099
+             EVALUATE EIBAID                                            00820099
+               WHEN DFHPF1                                              00830099
+                   EXEC CICS                                            00830199
+                      LINK PROGRAM('PGMALT51')                          00830299
+                   END-EXEC                                             00830399
+                   EXEC CICS                                            00831099
+                      SEND CONTROL ERASE                                00832099
+                   END-EXEC                                             00833099
+                   EXEC CICS                                            00837099
+                        RETURN TRANSID ('T251')                         00838099
+                   END-EXEC                                             00839099
+               WHEN DFHPF2                                              00870099
+                   EXEC CICS                                            00880099
+                      LINK PROGRAM('PGMBAJ51')                          00890099
+                   END-EXEC                                             00900099
+               WHEN DFHPF3                                              00910099
+                   EXEC CICS                                            00920099
+                      LINK PROGRAM('PGMMOD51')                          00930099
+                   END-EXEC                                             00940099
+               WHEN DFHPF4                                              00950099
+                   EXEC CICS                                            00960099
+                      LINK PROGRAM('PGMPRU51')                          00970099
+                   END-EXEC                                             00980099
+               WHEN DFHPF12                                             00990099
+                 MOVE  WS-PF12 TO WS-PF                                 01000099
+                   EXEC CICS                                            01010099
+                      SEND CONTROL ERASE                                01020099
+                   END-EXEC                                             01030099
+                   EXEC CICS                                            01040099
+                      SEND TEXT FROM (WS-PF)                            01050099
+                   END-EXEC                                             01060099
+                   EXEC CICS                                            01070099
+                        RETURN                                          01080099
+                   END-EXEC                                             01090099
+             END-EVALUATE.                                              01100099
+                                                                        01110099
+       3100-F-PF. EXIT.                                                 01120099
+                                                                        01130099
+       4000-I-OTHER.                                                    01140099
+                                                                        01150099
+      *SI PRESIONO OTRA TECLA MUESTRA UNA PANTALLA DE ERROR             01160099
+           MOVE WS-ERROR TO MSGO                                        01170099
+           PERFORM 6000-I-FECHA THRU 6000-F-FECHA                       01180099
+           EXEC CICS                                                    01190099
+                SEND MAP ('MAP0251')                                    01200099
+                MAPSET ('MAP0251')                                      01210099
+                FROM (MAP0251O)                                         01220099
+                LENGTH (WS-LONG)                                        01230099
+                ERASE                                                   01240099
+           END-EXEC.                                                    01250099
+                                                                        01260099
+       4000-F-OTHER. EXIT.                                              01270099
+                                                                        01280099
+       6000-I-FECHA.                                                    01290099
+                                                                        01300099
+           EXEC CICS                                                    01301099
+              LINK PROGRAM (WS-RUT)                                     01302099
+              COMMAREA (WS-COMMAREA)                                    01302199
+              LENGTH (WS-LEN)                                           01302299
+           END-EXEC                                                     01303099
+                                                                        01304099
+           MOVE WS-FECCOM TO FECHAO.                                    01390099
+                                                                        01400099
+       6000-F-FECHA. EXIT.                                              01410099
+                                                                        01420099
+       9999-I-FINAL.                                                    01430099
+                                                                        01440099
+           EXEC CICS                                                    01450099
+             RETURN                                                     01460099
+             TRANSID  ('T251')                                          01470099
+            END-EXEC.                                                   01480099
+                                                                        01490099
+       9999-F-FINAL. EXIT.                                              01500099
